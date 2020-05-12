@@ -7,13 +7,28 @@
 //
 
 import SwiftUI
-let pokemonList = ["皮卡丘","噴火龍","水箭龜"]
-var pokemonTable:[[String]] = [[]]
+let pokemonList = ["皮卡丘","噴火龍","水箭龜","妙娃花"]
+var pokemon1DTable:[String] = []
+var pokemon2DTable:[[String]] = []
+var tableWidth = 4
+var tableHeight = 4
 func GameStart(){
-    if let pokemon = pokemonList.randomElement(){
-        pokemonTable[0].append(pokemon)
+    for _ in 0...tableWidth*tableHeight/2-1 {
+        if let pokemon = pokemonList.randomElement(){
+            pokemon1DTable.append(pokemon)
+            pokemon1DTable.append(pokemon)
+        }
     }
-    print(pokemonTable)
+    print(pokemon1DTable.count)
+    pokemon1DTable.shuffle()
+    var k = 0
+    for i in 0...tableHeight-1{
+        pokemon2DTable.append([])
+        for j in 0...tableWidth-1{
+            pokemon2DTable[i].append(pokemon1DTable[k])
+            k+=1
+        }
+    }
 }
 struct ContentView: View {
     @State var showGameView : Bool = false //轉換頁面判斷
@@ -57,17 +72,15 @@ struct ContentView: View {
     }
 }
 struct GameView: View{
-    var digitCounts = Array(repeating: Array(repeating:0,count:5), count: 5)//宣告一個n*n的2D陣列
     var body: some View{
         VStack{
-            ForEach(0...4,id:\.self){ i in
+            ForEach(0...tableHeight-1,id:\.self){ i in
                 HStack{
-                    ForEach(0...4,id:\.self){ j in
-                        Text("\(self.digitCounts[i][j])")
+                    ForEach(0...tableWidth-1,id:\.self){ j in
+                        Text("\(pokemon2DTable[i][j])")
                     }
                 }
             }
-            Text("\(pokemonTable[0][0])")
         }
     }
 }
