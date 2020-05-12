@@ -123,6 +123,7 @@ struct GameView: View{
                 }
                 Button(action:{
                     GameStart()
+                    self.Table = pokemon2DTable
                 }){
                     Text("重新開始")
                 }
@@ -132,19 +133,22 @@ struct GameView: View{
                     ForEach(0...tableWidth-1,id:\.self){ j in
                         Button(action:{
                             print("\(self.Table[i][j])")
-                            if self.selectA.name != nil{
-                                if (self.selectA.name == self.Table[i][j] && (self.selectA.x != i || self.selectA.y != j) ){//名字若相同
+                            if (self.selectA.name != nil){
+                                if (self.selectA.name == self.Table[i][j] && (self.selectA.x != i || self.selectA.y != j) ){//名字相同且不同位置
                                     print("相同")
                                     self.Table[i][j] = "無"
                                     self.Table[self.selectA.x!][self.selectA.y!] = "無"
-                                }else{
+                                }else{//名字不相同或者點選到同一隻
                                     print("不相同")
                                 }
-                                self.selectA = Pokemon()
-                            }else{
+                                self.selectA = Pokemon()//重設
+                            }else{//如果還沒選
+                                
                                 self.selectA.name = self.Table[i][j]
                                 self.selectA.x = i
                                 self.selectA.y = j
+                                
+                                
                             }
                         }){
                             Image("\(self.Table[i][j])")
