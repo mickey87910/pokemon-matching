@@ -7,7 +7,14 @@
 //
 
 import SwiftUI
-
+let pokemonList = ["皮卡丘","噴火龍","水箭龜"]
+var pokemonTable:[[String]] = [[]]
+func GameStart(){
+    if let pokemon = pokemonList.randomElement(){
+        pokemonTable[0].append(pokemon)
+    }
+    print(pokemonTable)
+}
 struct ContentView: View {
     @State var showGameView : Bool = false //轉換頁面判斷
     var body: some View {
@@ -23,6 +30,7 @@ struct ContentView: View {
                 HStack {
                     Button(action:{
                         //要執行的內容
+                        GameStart()
                         self.showGameView = true
                     }){
                         //按鈕樣式設定
@@ -49,17 +57,17 @@ struct ContentView: View {
     }
 }
 struct GameView: View{
-    var pokemonClass = ["皮卡丘","噴火龍","水箭龜"]
     var digitCounts = Array(repeating: Array(repeating:0,count:5), count: 5)//宣告一個n*n的2D陣列
     var body: some View{
-        HStack{
+        VStack{
             ForEach(0...4,id:\.self){ i in
-                VStack{
+                HStack{
                     ForEach(0...4,id:\.self){ j in
                         Text("\(self.digitCounts[i][j])")
                     }
                 }
             }
+            Text("\(pokemonTable[0][0])")
         }
     }
 }
