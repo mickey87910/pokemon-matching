@@ -7,31 +7,54 @@
 //
 
 import SwiftUI
-let pokemonList = ["皮卡丘","噴火龍","水箭龜","妙娃花"]
+let pokemonList = ["皮卡丘","伊布","小火龍"]
 var pokemon1DTable:[String] = []
 var pokemon2DTable:[[String]] = []
 var tableWidth = 4
 var tableHeight = 4
 func GameStart(){
+    //取出n*n的寶可夢
     for _ in 0...tableWidth*tableHeight/2-1 {
         if let pokemon = pokemonList.randomElement(){
+            //寶可夢兩個同種類為一組
             pokemon1DTable.append(pokemon)
             pokemon1DTable.append(pokemon)
         }
     }
-    print(pokemon1DTable.count)
+    //打散寶可夢的排序
     pokemon1DTable.shuffle()
+    //將打散好的寶可夢添入二維陣列
     var k = 0
     for i in 0...tableHeight-1{
         pokemon2DTable.append([])
-        for j in 0...tableWidth-1{
+        for _ in 0...tableWidth-1{
             pokemon2DTable[i].append(pokemon1DTable[k])
             k+=1
         }
     }
 }
+func shuffleTable(table:[[String]])-> [[String]]{
+    var tmpTable:[String] = []
+    var newTable:[[String]] = []
+    for i in 0...tableHeight-1{
+        for j in 0...tableWidth-1{
+            tmpTable.append(table[i][j])
+        }
+    }
+    tmpTable.shuffle()
+    //將打散好的寶可夢添入二維陣列
+    var k = 0
+    for i in 0...tableHeight-1{
+        newTable.append([])
+        for _ in 0...tableWidth-1{
+            newTable[i].append(tmpTable[k])
+            k+=1
+        }
+    }
+    return newTable
+}
 struct ContentView: View {
-    @State var showGameView : Bool = false //轉換頁面判斷
+    @State var showGameView : Bool = false //切換頁面判斷
     var body: some View {
         VStack{
             if showGameView{
@@ -54,8 +77,17 @@ struct ContentView: View {
                             .font(.system(size: 26))
                             .border(Color.blue,width:5)
                             .cornerRadius(8)
-                            .padding()
                     }
+                }
+                Button(action:{
+                    print("213")
+                }){
+                    Text("遊戲設定")
+                        .padding()
+                        .font(.system(size: 26))
+                        .border(Color.blue,width:5)
+                        .cornerRadius(8)
+                        .padding()
                 }
                 Button(action:{
                     print("213")
@@ -65,19 +97,24 @@ struct ContentView: View {
                         .font(.system(size: 26))
                         .border(Color.blue,width:5)
                         .cornerRadius(8)
-                        .padding()
                 }
             }
         }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity)
     }
 }
 struct GameView: View{
+    @State var Table = pokemon2DTable
     var body: some View{
         VStack{
+            Button(action:{
+                self.Table = shuffleTable(table:self.Table)
+            }){
+                Text("洗牌")
+            }
             ForEach(0...tableHeight-1,id:\.self){ i in
                 HStack{
                     ForEach(0...tableWidth-1,id:\.self){ j in
-                        Text("\(pokemon2DTable[i][j])")
+                        Image("\(self.Table[i][j])")
                     }
                 }
             }
