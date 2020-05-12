@@ -14,6 +14,8 @@ var tableWidth = 4
 var tableHeight = 4
 func GameStart(){
     //取出n*n的寶可夢
+    pokemon1DTable = []
+    pokemon2DTable = []
     for _ in 0...tableWidth*tableHeight/2-1 {
         if let pokemon = pokemonList.randomElement(){
             //寶可夢兩個同種類為一組
@@ -41,8 +43,9 @@ func shuffleTable(table:[[String]])-> [[String]]{
             tmpTable.append(table[i][j])
         }
     }
+    //打散寶可夢的排序
     tmpTable.shuffle()
-    //將打散好的寶可夢添入二維陣列
+    //將打散好的寶可夢重新添入二維陣列
     var k = 0
     for i in 0...tableHeight-1{
         newTable.append([])
@@ -52,6 +55,11 @@ func shuffleTable(table:[[String]])-> [[String]]{
         }
     }
     return newTable
+}
+struct Pokemon{
+    var name:String?
+    var x:Int?
+    var y:Int?
 }
 struct ContentView: View {
     @State var showGameView : Bool = false //切換頁面判斷
@@ -104,17 +112,44 @@ struct ContentView: View {
 }
 struct GameView: View{
     @State var Table = pokemon2DTable
+    @State var selectA = Pokemon()
     var body: some View{
         VStack{
-            Button(action:{
-                self.Table = shuffleTable(table:self.Table)
-            }){
-                Text("洗牌")
+            HStack{
+                Button(action:{
+                    self.Table = shuffleTable(table:self.Table)
+                }){
+                    Text("洗牌")
+                }
+                Button(action:{
+                    GameStart()
+                }){
+                    Text("重新開始")
+                }
             }
             ForEach(0...tableHeight-1,id:\.self){ i in
                 HStack{
                     ForEach(0...tableWidth-1,id:\.self){ j in
-                        Image("\(self.Table[i][j])")
+                        Button(action:{
+                            print("\(self.Table[i][j])")
+                            if self.selectA.name != nil{
+                                if (self.selectA.name == self.Table[i][j] && (self.selectA.x != i || self.selectA.y != j) ){//名字若相同
+                                    print("相同")
+                                    self.Table[i][j] = "無"
+                                    self.Table[self.selectA.x!][self.selectA.y!] = "無"
+                                }else{
+                                    print("不相同")
+                                }
+                                self.selectA = Pokemon()
+                            }else{
+                                self.selectA.name = self.Table[i][j]
+                                self.selectA.x = i
+                                self.selectA.y = j
+                            }
+                        }){
+                            Image("\(self.Table[i][j])")
+                            
+                        }.buttonStyle(PlainButtonStyle())//避免按鈕顏色覆蓋圖片
                     }
                 }
             }
