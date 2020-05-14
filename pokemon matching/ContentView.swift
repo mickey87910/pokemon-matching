@@ -7,17 +7,19 @@
 //
 
 import SwiftUI
-let pokemonList = ["皮卡丘","伊布","小火龍"]
+let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子"]
 var pokemon1DTable:[String] = []
 var pokemon2DTable:[[String]] = []
 var path:[Pokemon] = []
 var tableWidth = 6
 var tableHeight = 6
+var scroe = 0
 func GameStart(){
     //取出n*n的寶可夢
     pokemon1DTable = []
     pokemon2DTable = []
     path = []
+    scroe = 0
     for _ in 0...tableWidth*tableHeight/2-1 {
         if let pokemon = pokemonList.randomElement(){
             //寶可夢兩個同種類為一組
@@ -62,15 +64,17 @@ func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Stri
     //初始化參數 & let to var
     var nodes = nodes
     var flag = false
+    var directionList:[String] = []
     //將當前 node 加入 nodes 陣列
     var node = Pokemon()
     node.x = nodeX
     node.y = nodeY
     let containFlag = nodes.contains{ (pokemon) -> Bool in
+        //查看當前節點是否已經走過了
         return pokemon.x == node.x && pokemon.y == node.y
     }
     if (times > 2 || nodeX < 0 || nodeX >= Table.count || nodeY < 0 || nodeY >= Table[0].count || containFlag){
-        //轉彎超過兩次或者節點超過表格大小
+        //轉彎超過兩次或者節點超過表格大小以及該節點是否已經走過
         return false
     }else{
         nodes.append(node)
@@ -79,47 +83,54 @@ func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Stri
             path = nodes
             return true
         }else if(Table[nodeY][nodeX] != "無" && direction != "NONE"){
+            //如果當前節點不可行走(初始起點不算)
             return false
         }else{
-            //往左
-            if(flag != true){
-                if (direction == "LEFT" || direction == "NONE"){
-                    flag = findpath(nodeX: nodeX-1, nodeY: nodeY, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times, direction: "LEFT")
-                }else{
-                    flag = findpath(nodeX: nodeX-1, nodeY: nodeY, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times+1, direction: "LEFT")
-                }
-            }
-            //往下
-            if(flag != true){
-                if (direction == "DOWN" || direction == "NONE"){
-                    flag = findpath(nodeX: nodeX, nodeY: nodeY+1, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times, direction: "DOWN")
-                }else{
-                    flag = findpath(nodeX: nodeX, nodeY: nodeY+1, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times+1, direction: "DOWN")
-                }
-            }
-            //往右
-            if(flag != true){
-                if (direction == "RIGHT" || direction == "NONE"){
-                    flag = findpath(nodeX: nodeX+1, nodeY: nodeY, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times, direction: "RIGHT")
-                }else{
-                    flag = findpath(nodeX: nodeX+1, nodeY: nodeY, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times+1, direction: "RIGHT")
-                }
-            }
-            //往上
-            if(flag != true){
-                if (direction == "UP" || direction == "NONE"){
-                    flag = findpath(nodeX: nodeX, nodeY: nodeY-1, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times, direction: "UP")
-                }else{
-                    flag = findpath(nodeX: nodeX, nodeY: nodeY-1, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times+1, direction: "UP")
+            if (nodeX > destinationX && nodeY > destinationY){ directionList = getDirectionList(location: "左上")}//若目的地在節點左上
+            else if(nodeX > destinationX && nodeY < destinationY){ directionList = getDirectionList(location: "左下")}//若目的地在節點左下
+            else if(nodeX < destinationX && nodeY > destinationY){ directionList = getDirectionList(location: "右上")}//若目的地在節點右上
+            else if(nodeX < destinationX && nodeY < destinationY){ directionList = getDirectionList(location: "右下")}//若目的地在節點右上
+            else if(nodeX == destinationX && nodeY != destinationY){ directionList = getDirectionList(location: "上下")}//若目的地在節點上下
+            else if(nodeX != destinationX && nodeY == destinationY){ directionList = getDirectionList(location: "左右")}//若目的地在節點左右
+            print(directionList)
+            for i in 0...3{
+                var x = 0
+                var y = 0
+                if (directionList[i] == "LEFT"){x = -1;y = 0}
+                else if (directionList[i] == "RIGHT"){x = 1;y = 0}
+                else if (directionList[i] == "UP"){x = 0;y = -1}
+                else if (directionList[i] == "DOWN"){x = 0;y = 1}
+                
+                if(flag != true){
+                    if (direction == directionList[i] || direction == "NONE"){
+                        flag = findpath(nodeX: nodeX+x, nodeY: nodeY+y, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times, direction: directionList[i])
+                    }else{
+                        //如果將行走方向與原方向不同代表轉彎
+                        flag = findpath(nodeX: nodeX+x, nodeY: nodeY+y, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times+1, direction: directionList[i])
+                    }
                 }
             }
         }
     }
-    print(nodeX)
-    print(nodeY)
-    print(destinationX)
-    print(destinationY)
     return flag
+}
+func getDirectionList(location:String)->[String]{
+    switch location {
+    case "右上":
+        return ["RIGHT","UP","LEFT","DOWN"]
+    case "右下":
+        return ["RIGHT","DOWN","LEFT","UP"]
+    case "左上":
+        return ["LEFT","UP","RIGHT","DOWN"]
+    case "左下":
+        return ["LEFT","DOWN","RIGHT","UP"]
+    case "上下":
+        return ["UP","DOWN","LEFT","RIGHT"]
+    case "左右":
+        return ["LEFT","RIGHT","UP","DOWN"]
+    default:
+        return []
+    }
 }
 struct Pokemon{
     var name:String?
@@ -199,36 +210,41 @@ struct GameView: View{
                     ForEach(0...tableWidth-1,id:\.self){ j in
                         Button(action:{
                             print("\(self.Table[i][j])(\(j),\(i))")
-                            if (self.selectA.name != nil){
-                                //如果A可夢已經被選取則設定B可夢
-                                self.selectB.name = self.Table[i][j]
-                                self.selectB.x = j
-                                self.selectB.y = i
-                                if (self.selectA.name == self.selectB.name && (self.selectA.x != j || self.selectA.y != i) ){//名字相同且不同位置
-                                    path = []
-                                    if(findpath(nodeX:self.selectA.x!,nodeY:self.selectA.y!,destinationX:self.selectB.x!,destinationY:self.selectB.y!,Table:self.Table)){
-                                        //如果有找到連接之路徑
-                                        for item in path{
-                                            self.Table[item.y!][item.x!] = "Star"
-                                        }
-                                        self.Table[i][j] = "Star"
-                                        self.Table[self.selectA.y!][self.selectA.x!] = "Star"
-                                    }else{
-                                        //如果找不到連接之路徑
-                                        print("找無路徑")
-                                    }
-                                }else{//名字不相同或者點選到同一隻
-                                    print("取消選擇")
-                                }
-                                //重設
+                            if (self.Table[i][j] == "無"){
                                 self.selectA = Pokemon()
                                 self.selectB = Pokemon()
-                            }else{//如果還沒選則設定A可夢
-                                self.selectA.name = self.Table[i][j]
-                                self.selectA.x = j
-                                self.selectA.y = i
-                                for item in path{
-                                    self.Table[item.y!][item.x!] = "無"
+                            }else{
+                                if (self.selectA.name != nil){
+                                    //如果A可夢已經被選取則設定B可夢
+                                    self.selectB.name = self.Table[i][j]
+                                    self.selectB.x = j
+                                    self.selectB.y = i
+                                    if (self.selectA.name == self.selectB.name && (self.selectA.x != j || self.selectA.y != i) ){//名字相同且不同位置
+                                        path = []
+                                        if(findpath(nodeX:self.selectA.x!,nodeY:self.selectA.y!,destinationX:self.selectB.x!,destinationY:self.selectB.y!,Table:self.Table)){
+                                            //如果有找到連接之路徑則顯示路徑
+                                            for item in path{
+                                                self.Table[item.y!][item.x!] = "星星"
+                                            }
+                                            self.Table[i][j] = "星星"
+                                            self.Table[self.selectA.y!][self.selectA.x!] = "星星"
+                                        }else{
+                                            //如果找不到連接之路徑
+                                            print("找無路徑")
+                                        }
+                                    }else{//名字不相同或者點選到同一隻
+                                        print("取消選擇")
+                                    }
+                                    //重設
+                                    self.selectA = Pokemon()
+                                    self.selectB = Pokemon()
+                                }else{//如果還沒選則設定A可夢
+                                    self.selectA.name = self.Table[i][j]
+                                    self.selectA.x = j
+                                    self.selectA.y = i
+                                    for item in path{
+                                        self.Table[item.y!][item.x!] = "無"
+                                    }
                                 }
                             }
                         }){
