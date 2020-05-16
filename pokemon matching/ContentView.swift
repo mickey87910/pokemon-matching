@@ -7,19 +7,19 @@
 //
 
 import SwiftUI
-let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子"]
+let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王"]
 var pokemon1DTable:[String] = []
 var pokemon2DTable:[[String]] = []
 var path:[Pokemon] = []
-var tableWidth = 6
+var tableWidth = 12
 var tableHeight = 6
-var scroe = 0
+var score = 0
 func GameStart(){
     //取出n*n的寶可夢
     pokemon1DTable = []
     pokemon2DTable = []
     path = []
-    scroe = 0
+    score = 0
     for _ in 0...tableWidth*tableHeight/2-1 {
         if let pokemon = pokemonList.randomElement(){
             //寶可夢兩個同種類為一組
@@ -73,7 +73,7 @@ func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Stri
         //查看當前節點是否已經走過了
         return pokemon.x == node.x && pokemon.y == node.y
     }
-    if (times > 2 || nodeX < 0 || nodeX >= Table.count || nodeY < 0 || nodeY >= Table[0].count || containFlag){
+    if (times > 2 || nodeX < 0 || nodeX >= Table[0].count || nodeY < 0 || nodeY >= Table.count || containFlag){
         //轉彎超過兩次或者節點超過表格大小以及該節點是否已經走過
         return false
     }else{
@@ -115,6 +115,7 @@ func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Stri
     return flag
 }
 func getDirectionList(location:String)->[String]{
+    //決定尋找方向的順序
     switch location {
     case "右上":
         return ["RIGHT","UP","LEFT","DOWN"]
@@ -144,12 +145,12 @@ struct ContentView: View {
             if showGameView{
                 GameView()
             }else{
-                Text("寶可夢連連看")
-                    .bold()
-                    .font(.system(size: 48))
-                    .foregroundColor(.yellow)
-                    .padding()
-                HStack {
+                VStack{
+                    Spacer()
+                    Image("標題").resizable().scaledToFit()
+                    Spacer()
+                }
+                HStack{
                     Button(action:{
                         //要執行的內容
                         GameStart()
@@ -159,31 +160,36 @@ struct ContentView: View {
                         Text("開始遊戲")
                             .padding()
                             .font(.system(size: 26))
-                            .border(Color.blue,width:5)
+                            .background(Color.white)
+                            .border(Color.blue,width:3)
+                            .cornerRadius(8)
+                    }
+                    
+                    Button(action:{
+                        print("213")
+                    }){
+                        Text("遊戲設定")
+                            .padding()
+                            .font(.system(size: 26))
+                            .background(Color.white)
+                            .border(Color.blue,width:3)
+                            .cornerRadius(8)
+                            .padding()
+                    }
+                    
+                    Button(action:{
+                        print("213")
+                    }){
+                        Text("遊戲說明")
+                            .padding()
+                            .background(Color.white)
+                            .font(.system(size: 26))
+                            .border(Color.blue,width:3)
                             .cornerRadius(8)
                     }
                 }
-                Button(action:{
-                    print("213")
-                }){
-                    Text("遊戲設定")
-                        .padding()
-                        .font(.system(size: 26))
-                        .border(Color.blue,width:5)
-                        .cornerRadius(8)
-                        .padding()
-                }
-                Button(action:{
-                    print("213")
-                }){
-                    Text("遊戲說明")
-                        .padding()
-                        .font(.system(size: 26))
-                        .border(Color.blue,width:5)
-                        .cornerRadius(8)
-                }
             }
-        }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity)
+        }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).background(Color(red:187/255.0,green:255/255.0,blue:180/255.0)).edgesIgnoringSafeArea(.all)
     }
 }
 struct GameView: View{
@@ -194,6 +200,10 @@ struct GameView: View{
         VStack{
             HStack{
                 Button(action:{
+                    for item in path{
+                        self.Table[item.y!][item.x!] = "無"
+                    }
+                    path = []
                     self.Table = shuffleTable(table:self.Table)
                 }){
                     Text("洗牌")
@@ -204,13 +214,15 @@ struct GameView: View{
                 }){
                     Text("重新開始")
                 }
+                Text("分數:\(score)")
             }
             ForEach(0...tableHeight-1,id:\.self){ i in
                 HStack{
                     ForEach(0...tableWidth-1,id:\.self){ j in
                         Button(action:{
+                            //Button Action
                             print("\(self.Table[i][j])(\(j),\(i))")
-                            if (self.Table[i][j] == "無"){
+                            if (self.Table[i][j] == "無" || self.Table[i][j] == "星星"){
                                 self.selectA = Pokemon()
                                 self.selectB = Pokemon()
                             }else{
@@ -219,15 +231,14 @@ struct GameView: View{
                                     self.selectB.name = self.Table[i][j]
                                     self.selectB.x = j
                                     self.selectB.y = i
-                                    if (self.selectA.name == self.selectB.name && (self.selectA.x != j || self.selectA.y != i) ){//名字相同且不同位置
+                                    if (self.selectA.name == self.selectB.name && (self.selectA.x != self.selectB.x || self.selectA.y != self.selectB.y) ){//名字相同且不同位置
                                         path = []
                                         if(findpath(nodeX:self.selectA.x!,nodeY:self.selectA.y!,destinationX:self.selectB.x!,destinationY:self.selectB.y!,Table:self.Table)){
                                             //如果有找到連接之路徑則顯示路徑
                                             for item in path{
                                                 self.Table[item.y!][item.x!] = "星星"
                                             }
-                                            self.Table[i][j] = "星星"
-                                            self.Table[self.selectA.y!][self.selectA.x!] = "星星"
+                                            score = score + 100
                                         }else{
                                             //如果找不到連接之路徑
                                             print("找無路徑")
@@ -247,9 +258,15 @@ struct GameView: View{
                                     }
                                 }
                             }
+                            //Button Action
                         }){
-                            Image("\(self.Table[i][j])")
-                            
+                            //ButtonStyle
+                            if(self.selectA.x == j && self.selectA.y == i){
+                                Image("\(self.Table[i][j])")
+                                    .border(Color.blue,width:2.0)
+                            }else{
+                                Image("\(self.Table[i][j])")
+                            }
                         }.buttonStyle(PlainButtonStyle())//避免按鈕顏色覆蓋圖片
                     }
                 }
