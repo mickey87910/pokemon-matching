@@ -13,7 +13,9 @@ var pokemon2DTable:[[String]] = []
 var path:[Pokemon] = []
 var tableWidth = 12
 var tableHeight = 6
-var score = 0
+var score = 0 //分數
+var level = "" //難易度
+var refreshTimes = 0 //洗牌次數
 func GameStart(){
     //取出n*n的寶可夢
     pokemon1DTable = []
@@ -200,6 +202,14 @@ struct GameView: View{
         VStack{
             HStack{
                 Button(action:{
+                    GameStart()
+                    self.Table = pokemon2DTable
+                }){
+                    Text("重新開始")
+                        .font(.system(size: 32))
+                }
+                Spacer()
+                Button(action:{
                     for item in path{
                         self.Table[item.y!][item.x!] = "無"
                     }
@@ -207,69 +217,74 @@ struct GameView: View{
                     self.Table = shuffleTable(table:self.Table)
                 }){
                     Text("洗牌")
+                        .font(.system(size: 32))
                 }
-                Button(action:{
-                    GameStart()
-                    self.Table = pokemon2DTable
-                }){
-                    Text("重新開始")
-                }
-                Text("分數:\(score)")
-            }
-            ForEach(0...tableHeight-1,id:\.self){ i in
-                HStack{
-                    ForEach(0...tableWidth-1,id:\.self){ j in
-                        Button(action:{
-                            //Button Action
-                            print("\(self.Table[i][j])(\(j),\(i))")
-                            if (self.Table[i][j] == "無" || self.Table[i][j] == "星星"){
-                                self.selectA = Pokemon()
-                                self.selectB = Pokemon()
-                            }else{
-                                if (self.selectA.name != nil){
-                                    //如果A可夢已經被選取則設定B可夢
-                                    self.selectB.name = self.Table[i][j]
-                                    self.selectB.x = j
-                                    self.selectB.y = i
-                                    if (self.selectA.name == self.selectB.name && (self.selectA.x != self.selectB.x || self.selectA.y != self.selectB.y) ){//名字相同且不同位置
-                                        path = []
-                                        if(findpath(nodeX:self.selectA.x!,nodeY:self.selectA.y!,destinationX:self.selectB.x!,destinationY:self.selectB.y!,Table:self.Table)){
-                                            //如果有找到連接之路徑則顯示路徑
-                                            for item in path{
-                                                self.Table[item.y!][item.x!] = "星星"
-                                            }
-                                            score = score + 100
-                                        }else{
-                                            //如果找不到連接之路徑
-                                            print("找無路徑")
-                                        }
-                                    }else{//名字不相同或者點選到同一隻
-                                        print("取消選擇")
-                                    }
-                                    //重設
+                Text("分數:")
+                    .font(.system(size: 32))
+                Text("\(score)")
+                    .fixedSize()
+                    .font(.system(size: 32))
+                    .frame(width:100)
+                
+            }.frame(minWidth:0,maxWidth: .infinity).background(Color.yellow)
+            VStack{
+                ForEach(0...tableHeight-1,id:\.self){ i in
+                    HStack{
+                        ForEach(0...tableWidth-1,id:\.self){ j in
+                            Button(action:{
+                                //Button Action
+                                print("\(self.Table[i][j])(\(j),\(i))")
+                                if (self.Table[i][j] == "無" || self.Table[i][j] == "星星"){
                                     self.selectA = Pokemon()
                                     self.selectB = Pokemon()
-                                }else{//如果還沒選則設定A可夢
-                                    self.selectA.name = self.Table[i][j]
-                                    self.selectA.x = j
-                                    self.selectA.y = i
-                                    for item in path{
-                                        self.Table[item.y!][item.x!] = "無"
+                                }else{
+                                    if (self.selectA.name != nil){
+                                        //如果A可夢已經被選取則設定B可夢
+                                        self.selectB.name = self.Table[i][j]
+                                        self.selectB.x = j
+                                        self.selectB.y = i
+                                        if (self.selectA.name == self.selectB.name && (self.selectA.x != self.selectB.x || self.selectA.y != self.selectB.y) ){//名字相同且不同位置
+                                            path = []
+                                            if(findpath(nodeX:self.selectA.x!,nodeY:self.selectA.y!,destinationX:self.selectB.x!,destinationY:self.selectB.y!,Table:self.Table)){
+                                                //如果有找到連接之路徑則顯示路徑
+                                                for item in path{
+                                                    self.Table[item.y!][item.x!] = "星星"
+                                                }
+                                                score = score + 100
+                                            }else{
+                                                //如果找不到連接之路徑
+                                                print("找無路徑")
+                                            }
+                                        }else{//名字不相同或者點選到同一隻
+                                            print("取消選擇")
+                                        }
+                                        //重設
+                                        self.selectA = Pokemon()
+                                        self.selectB = Pokemon()
+                                    }else{//如果還沒選則設定A可夢
+                                        self.selectA.name = self.Table[i][j]
+                                        self.selectA.x = j
+                                        self.selectA.y = i
+                                        for item in path{
+                                            self.Table[item.y!][item.x!] = "無"
+                                        }
                                     }
                                 }
-                            }
-                            //Button Action
-                        }){
-                            //ButtonStyle
-                            if(self.selectA.x == j && self.selectA.y == i){
-                                Image("\(self.Table[i][j])")
-                                    .border(Color.blue,width:2.0)
-                            }else{
-                                Image("\(self.Table[i][j])")
-                            }
-                        }.buttonStyle(PlainButtonStyle())//避免按鈕顏色覆蓋圖片
+                                //Button Action
+                            }){
+                                //ButtonStyle
+                                if(self.selectA.x == j && self.selectA.y == i){
+                                    Image("\(self.Table[i][j])")
+                                        .border(Color.blue,width:2.0)
+                                }else{
+                                    Image("\(self.Table[i][j])")
+                                }
+                            }.buttonStyle(PlainButtonStyle())//避免按鈕顏色覆蓋圖片
+                        }
                     }
+                    
                 }
+                Spacer()
             }
         }
     }
