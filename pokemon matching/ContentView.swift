@@ -15,7 +15,8 @@ var tableWidth = 12
 var tableHeight = 6
 var score = 0 //分數
 var level = "" //難易度
-var refreshTimes = 0 //洗牌次數
+var refreshTimes = 3 //洗牌次數
+var tipsTimes = 3 //提示次數
 func GameStart(){
     //取出n*n的寶可夢
     pokemon1DTable = []
@@ -198,6 +199,8 @@ struct GameView: View{
     @State var Table = pokemon2DTable
     @State var selectA = Pokemon()
     @State var selectB = Pokemon()
+    @State var tipsA = Pokemon()
+    @State var tipsB = Pokemon()
     var body: some View{
         VStack{
             HStack{
@@ -205,20 +208,42 @@ struct GameView: View{
                     GameStart()
                     self.Table = pokemon2DTable
                 }){
-                    Text("重新開始")
-                        .font(.system(size: 32))
+                    Image("close").foregroundColor(Color.red)
                 }
                 Spacer()
+                
                 Button(action:{
-                    for item in path{
-                        self.Table[item.y!][item.x!] = "無"
+                    //do 提示
+                    if (tipsTimes > 0) {
+                        tipsTimes -= 1
                     }
-                    path = []
-                    self.Table = shuffleTable(table:self.Table)
                 }){
-                    Text("洗牌")
-                        .font(.system(size: 32))
+                    Image("tips").foregroundColor(Color.green)
                 }
+                Text("提示:")
+                    .font(.system(size:32))
+                Text("\(tipsTimes)")
+                    .font(.system(size: 32))
+                Button(action:{
+                    if( refreshTimes > 0){
+                        for item in path{
+                            self.Table[item.y!][item.x!] = "無"
+                        }
+                        path = []
+                        self.Table = shuffleTable(table:self.Table)
+                        refreshTimes -= 1
+                        
+                    }
+                }){
+                    Image("refresh").foregroundColor(Color.blue)
+                }
+                
+                Text("洗牌:")
+                    .font(.system(size: 32))
+                Text("\(refreshTimes)")
+                    .font(.system(size: 32))
+                
+                
                 Text("分數:")
                     .font(.system(size: 32))
                 Text("\(score)")
