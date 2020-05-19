@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7011E8102474572F00EC8899 /* DragonQuestTitleMusic.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7011E80F2474572F00EC8899 /* DragonQuestTitleMusic.mp3 */; };
+		7011E82624746B1700EC8899 /* miss.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7011E81F24746B1600EC8899 /* miss.mp3 */; };
+		7011E82724746B1700EC8899 /* press.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7011E82024746B1700EC8899 /* press.mp3 */; };
+		7011E82824746B1700EC8899 /* hit.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7011E82124746B1700EC8899 /* hit.mp3 */; };
+		7011E82924746B1700EC8899 /* select.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7011E82224746B1700EC8899 /* select.mp3 */; };
+		7011E82A24746B1700EC8899 /* spell.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7011E82324746B1700EC8899 /* spell.mp3 */; };
+		7011E82B24746B1700EC8899 /* victory.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7011E82424746B1700EC8899 /* victory.mp3 */; };
+		7011E82C24746B1700EC8899 /* cancel.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7011E82524746B1700EC8899 /* cancel.mp3 */; };
 		704804D52465A3A5008E9E87 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704804D42465A3A5008E9E87 /* AppDelegate.swift */; };
 		704804D72465A3A5008E9E87 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704804D62465A3A5008E9E87 /* SceneDelegate.swift */; };
 		704804D92465A3A5008E9E87 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704804D82465A3A5008E9E87 /* ContentView.swift */; };
@@ -16,6 +24,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7011E80F2474572F00EC8899 /* DragonQuestTitleMusic.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = DragonQuestTitleMusic.mp3; sourceTree = "<group>"; };
+		7011E81F24746B1600EC8899 /* miss.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = miss.mp3; sourceTree = "<group>"; };
+		7011E82024746B1700EC8899 /* press.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = press.mp3; sourceTree = "<group>"; };
+		7011E82124746B1700EC8899 /* hit.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = hit.mp3; sourceTree = "<group>"; };
+		7011E82224746B1700EC8899 /* select.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = select.mp3; sourceTree = "<group>"; };
+		7011E82324746B1700EC8899 /* spell.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = spell.mp3; sourceTree = "<group>"; };
+		7011E82424746B1700EC8899 /* victory.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = victory.mp3; sourceTree = "<group>"; };
+		7011E82524746B1700EC8899 /* cancel.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = cancel.mp3; sourceTree = "<group>"; };
 		704804D12465A3A5008E9E87 /* pokemon matching.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "pokemon matching.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		704804D42465A3A5008E9E87 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		704804D62465A3A5008E9E87 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -56,6 +72,14 @@
 		704804D32465A3A5008E9E87 /* pokemon matching */ = {
 			isa = PBXGroup;
 			children = (
+				7011E82524746B1700EC8899 /* cancel.mp3 */,
+				7011E82124746B1700EC8899 /* hit.mp3 */,
+				7011E81F24746B1600EC8899 /* miss.mp3 */,
+				7011E82024746B1700EC8899 /* press.mp3 */,
+				7011E82224746B1700EC8899 /* select.mp3 */,
+				7011E82324746B1700EC8899 /* spell.mp3 */,
+				7011E82424746B1700EC8899 /* victory.mp3 */,
+				7011E80F2474572F00EC8899 /* DragonQuestTitleMusic.mp3 */,
 				704804D42465A3A5008E9E87 /* AppDelegate.swift */,
 				704804D62465A3A5008E9E87 /* SceneDelegate.swift */,
 				704804D82465A3A5008E9E87 /* ContentView.swift */,
@@ -133,9 +157,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7011E82924746B1700EC8899 /* select.mp3 in Resources */,
+				7011E82A24746B1700EC8899 /* spell.mp3 in Resources */,
+				7011E82824746B1700EC8899 /* hit.mp3 in Resources */,
 				704804E12465A3A8008E9E87 /* LaunchScreen.storyboard in Resources */,
+				7011E82624746B1700EC8899 /* miss.mp3 in Resources */,
+				7011E82B24746B1700EC8899 /* victory.mp3 in Resources */,
+				7011E82724746B1700EC8899 /* press.mp3 in Resources */,
+				7011E82C24746B1700EC8899 /* cancel.mp3 in Resources */,
 				704804DE2465A3A8008E9E87 /* Preview Assets.xcassets in Resources */,
 				704804DB2465A3A8008E9E87 /* Assets.xcassets in Resources */,
+				7011E8102474572F00EC8899 /* DragonQuestTitleMusic.mp3 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
