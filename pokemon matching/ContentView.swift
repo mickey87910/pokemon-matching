@@ -28,10 +28,9 @@ func playSound(sound:String){
                 titleAudioPlayer?.numberOfLoops = -1//無限迴圈
                 titleAudioPlayer?.play()
             }else{
-            audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
+                audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
                 audioPlayer?.setVolume(0.6,fadeDuration: 1)
-            audioPlayer?.play()
-            print("播放音樂")
+                audioPlayer?.play()
             }
         }catch{
             print("file not found")
@@ -142,13 +141,13 @@ func getDirectionList(location:String)->[String]{
     //決定尋找方向的順序
     switch location {
     case "右上":
-        return ["RIGHT","UP","LEFT","DOWN"]
+        return ["UP","RIGHT","LEFT","DOWN"]
     case "右下":
-        return ["RIGHT","DOWN","LEFT","UP"]
+        return ["DOWN","RIGHT","LEFT","UP"]
     case "左上":
-        return ["LEFT","UP","RIGHT","DOWN"]
+        return ["UP","LEFT","RIGHT","DOWN"]
     case "左下":
-        return ["LEFT","DOWN","RIGHT","UP"]
+        return ["DOWN","LEFT","RIGHT","UP"]
     case "上下":
         return ["UP","DOWN","LEFT","RIGHT"]
     case "左右":
@@ -164,62 +163,103 @@ struct Pokemon{
 }
 struct ContentView: View { //主畫面
     @State var showGameView : Bool = false //切換頁面判斷
+    @State var showSetting : Bool = false //顯示遊戲設定
+    @State var showIntroduction : Bool = false //顯示說明
     var body: some View {
-        VStack{
-            if showGameView{
-                GameView()
-            }else{
-                VStack{
-                    Spacer()
-                    Image("標題").resizable()
-                        .scaledToFit()
-                        .onAppear(perform: {
-                            playSound(sound: "DragonQuestTitleMusic")
-                        })
-                    Spacer()
-                }
-                HStack{
-                    Button(action:{
-                        //要執行的內容
-                        GameStart()
-                        self.showGameView = true
-                        titleAudioPlayer?.stop()
-                        playSound(sound: "press")
-                    }){
-                        //按鈕樣式設定
-                        Text("開始遊戲")
-                            .padding()
-                            .font(.system(size: 26))
-                            .background(Color.white)
-                            .border(Color.blue,width:3)
-                            .cornerRadius(8)
+        ZStack{
+            VStack{
+                if showGameView{
+                    GameView()
+                }else{
+                    VStack{
+                        Spacer()
+                        Image("標題").resizable()
+                            .scaledToFit()
+                            .onAppear(perform: {
+                                playSound(sound: "DragonQuestTitleMusic")
+                            })
+                        Spacer()
                     }
-                    
-                    Button(action:{
-                        print("213")
-                        playSound(sound: "press")
-                    }){
-                        Text("遊戲設定")
-                            .padding()
-                            .font(.system(size: 26))
-                            .background(Color.white)
-                            .border(Color.blue,width:3)
-                            .cornerRadius(8)
-                            .padding()
-                    }
-                    
-                    Button(action:{
-                        print("213")
-                        playSound(sound: "press")
-                    }){
-                        Text("遊戲說明")
-                            .padding()
-                            .background(Color.white)
-                            .font(.system(size: 26))
-                            .border(Color.blue,width:3)
-                            .cornerRadius(8)
-                    }
-                }
+                    HStack{
+                        Button(action:{
+                            //要執行的內容
+                            GameStart()
+                            self.showGameView = true
+                            self.showIntroduction = false
+                            self.showSetting = false
+                            titleAudioPlayer?.stop()
+                            playSound(sound: "press")
+                        }){
+                            //按鈕樣式設定
+                            Text("開始遊戲")
+                                .padding()
+                                .font(.system(size: 26))
+                                .background(Color.white)
+                                .border(Color.blue,width:3)
+                                .cornerRadius(8)
+                        }
+                        
+                        Button(action:{
+                            self.showSetting = true
+                            playSound(sound: "press")
+                        }){
+                            Text("遊戲設定")
+                                .padding()
+                                .font(.system(size: 26))
+                                .background(Color.white)
+                                .border(Color.blue,width:3)
+                                .cornerRadius(8)
+                                .padding()
+                        }
+                        
+                        Button(action:{
+                            self.showIntroduction = true
+                            playSound(sound: "press")
+                        }){
+                            Text("遊戲說明")
+                                .padding()
+                                .background(Color.white)
+                                .font(.system(size: 26))
+                                .border(Color.blue,width:3)
+                                .cornerRadius(8)
+                        }
+                    }//HSTACK
+                }//else
+            }//VSTACK
+            if(self.showIntroduction || self.showSetting){
+                ZStack{
+                    VStack{
+                        if(self.showSetting == true){ //遊戲設定視窗
+                            Text("遊戲設定")
+                                .font(.largeTitle)
+                            Button(action:{
+                                self.showSetting = false
+                                playSound(sound: "press")
+                            }){
+                                Text("Close")
+                                    .padding()
+                                    .background(Color.white)
+                                    .font(.system(size: 26))
+                                    .border(Color.blue,width:3)
+                                    .cornerRadius(8)
+                            }
+                        }else if(self.showIntroduction == true){ //遊戲說明視窗
+                            Text("遊戲說明")
+                                .font(.largeTitle)
+                            Text("兩隻寶可夢間有路徑，並轉折兩次以內即可消除")
+                            Button(action:{
+                                self.showIntroduction = false
+                                playSound(sound: "press")
+                            }){
+                                Text("Close").padding()
+                                    .background(Color.white)
+                                    .font(.system(size: 26))
+                                    .border(Color.blue,width:3)
+                                    .cornerRadius(8)
+                            }
+                        }
+                    }.frame(width: UIScreen.main.bounds.width/2, height: UIScreen.main.bounds.height*2/3, alignment: .center).background(Color.white)
+                }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Color.black.opacity(0.5))
             }
         }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Image("星空"))//.background(Color(red:187/255.0,green:255/255.0,blue:180/255.0))
     }
