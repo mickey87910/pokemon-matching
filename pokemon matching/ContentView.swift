@@ -8,7 +8,7 @@
 
 import SwiftUI
 import AVFoundation
-let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王"]
+let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布","暖暖豬"]
 var pokemon1DTable:[String] = []
 var pokemon2DTable:[[String]] = []
 var path:[Pokemon] = [] //兩者路徑
@@ -16,8 +16,9 @@ var tableWidth = 12
 var tableHeight = 6
 var score = 0 //分數
 var level = "" //難易度
-var refreshTimes = 3 //洗牌次數
-var tipsTimes = 3 //提示次數
+var refreshTimes = 30 //洗牌次數
+var tipsTimes = 30 //提示次數
+var gameTime = 180 //遊戲時間
 var titleAudioPlayer : AVAudioPlayer?
 var audioPlayer : AVAudioPlayer?
 func playSound(sound:String){
@@ -83,6 +84,34 @@ func shuffleTable(table:[[String]])-> [[String]]{
     }
     return newTable
 }
+func findTips(Table:[[String]])->(Pokemon,Pokemon){
+    var selectA = Pokemon()
+    var selectB = Pokemon()
+    for i in 0...tableHeight-1{
+        for j in 0...tableWidth-1{
+            if(Table[i][j] != "無" && Table[i][j] != "星星"){
+                selectA.name = Table[i][j]
+                selectA.x = j
+                selectA.y = i
+                for k in 0...tableHeight-1{
+                    for m in 0...tableWidth-1{
+                        if (selectA.name == Table[k][m] && (i != k || j != m) ){
+                            selectB.name = Table[k][m]
+                            selectB.x = m
+                            selectB.y = k
+                            if(findpath(nodeX: selectA.x!, nodeY: selectA.y!, destinationX: selectB.x!, destinationY: selectB.y!, Table: Table)){
+                                return (selectA,selectB)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    selectA = Pokemon()
+    selectB = Pokemon()
+    return (selectA,selectB)
+}
 func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[String]],nodes:[Pokemon] = [],times:Int = 0,direction:String = "NONE")->Bool{
     //初始化參數 & let to var
     var nodes = nodes
@@ -115,7 +144,6 @@ func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Stri
             else if(nodeX < destinationX && nodeY < destinationY){ directionList = getDirectionList(location: "右下")}//若目的地在節點右上
             else if(nodeX == destinationX && nodeY != destinationY){ directionList = getDirectionList(location: "上下")}//若目的地在節點上下
             else if(nodeX != destinationX && nodeY == destinationY){ directionList = getDirectionList(location: "左右")}//若目的地在節點左右
-            print(directionList)
             for i in 0...3{
                 var x = 0
                 var y = 0
@@ -264,6 +292,15 @@ struct ContentView: View { //主畫面
         }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Image("星空"))//.background(Color(red:187/255.0,green:255/255.0,blue:180/255.0))
     }
 }
+func getImage(selectA:Pokemon,tipsA:Pokemon,tipsB:Pokemon,j:Int,i:Int,Table:[[String]])->AnyView{
+    if (selectA.x == j && selectA.y == i){
+        return AnyView(Image("\(Table[i][j])").border(Color.blue,width: 3))
+    }else if((tipsA.x == j && tipsA.y == i ) || (tipsB.x == j && tipsB.y == i )){
+        return AnyView(Image("\(Table[i][j])").border(Color.red,width: 3))
+    }else{
+        return AnyView(Image("\(Table[i][j])"))
+    }
+}
 struct GameView: View{ //遊戲介面
     @State var Table = pokemon2DTable
     @State var selectA = Pokemon()
@@ -285,7 +322,16 @@ struct GameView: View{ //遊戲介面
                     //do 提示
                     if (tipsTimes > 0) {
                         playSound(sound: "spell")
-                        tipsTimes -= 1
+                        for item in path{
+                            self.Table[item.y!][item.x!] = "無"
+                        }
+                        (self.tipsA , self.tipsB) = findTips(Table: self.Table)
+                        if (self.tipsA.name != nil && self.tipsB.name != nil){
+                            tipsTimes -= 1
+                            path = []
+                        }else{
+                            print("找不到解")
+                        }
                     }
                 }){
                     Image("tips").foregroundColor(Color.green)
@@ -331,7 +377,6 @@ struct GameView: View{ //遊戲介面
                             ForEach(0...tableWidth-1,id:\.self){ j in
                                 Button(action:{
                                     //Button Action
-                                    print("\(self.Table[i][j])(\(j),\(i))")
                                     if (self.Table[i][j] == "無" || self.Table[i][j] == "星星"){
                                         self.selectA = Pokemon()
                                         self.selectB = Pokemon()
@@ -369,18 +414,15 @@ struct GameView: View{ //遊戲介面
                                             for item in path{
                                                 self.Table[item.y!][item.x!] = "無"
                                             }
+                                            self.tipsA = Pokemon()
+                                            self.tipsB = Pokemon()
                                             playSound(sound: "select")
                                         }
                                     }
                                     //Button Action
                                 }){
                                     //ButtonStyle
-                                    if(self.selectA.x == j && self.selectA.y == i){
-                                        Image("\(self.Table[i][j])")
-                                            .border(Color.blue,width:2.0)
-                                    }else{
-                                        Image("\(self.Table[i][j])")
-                                    }
+                                    getImage(selectA: self.selectA, tipsA: self.tipsA, tipsB: self.tipsB, j: j, i: i, Table: self.Table)
                                 }.buttonStyle(PlainButtonStyle())//避免按鈕顏色覆蓋圖片
                             }
                         }
