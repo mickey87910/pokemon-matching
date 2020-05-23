@@ -8,7 +8,7 @@
 
 import SwiftUI
 import AVFoundation
-let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布","暖暖豬"]
+let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布"]
 var pokemon1DTable:[String] = []
 var pokemon2DTable:[[String]] = []
 var path:[Pokemon] = [] //兩者路徑
@@ -19,16 +19,16 @@ var level = "" //難易度
 var refreshTimes = 30 //洗牌次數
 var tipsTimes = 30 //提示次數
 var gameTime = 180 //遊戲時間
-var titleAudioPlayer : AVAudioPlayer?
-var audioPlayer : AVAudioPlayer?
+var titleAudioPlayer : AVAudioPlayer? //主畫面音樂
+var audioPlayer : AVAudioPlayer? //音效
 func playSound(sound:String){
     if let path = Bundle.main.path(forResource: sound, ofType: "mp3"){
         do{
-            if (sound == "DragonQuestTitleMusic"){
+            if (sound == "DragonQuestTitleMusic"){//主畫面音樂
                 titleAudioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
                 titleAudioPlayer?.numberOfLoops = -1//無限迴圈
                 titleAudioPlayer?.play()
-            }else{
+            }else{//其他音效
                 audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
                 audioPlayer?.setVolume(0.6,fadeDuration: 1)
                 audioPlayer?.play()
@@ -292,10 +292,28 @@ struct ContentView: View { //主畫面
         }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Image("星空"))//.background(Color(red:187/255.0,green:255/255.0,blue:180/255.0))
     }
 }
-func getImage(selectA:Pokemon,tipsA:Pokemon,tipsB:Pokemon,j:Int,i:Int,Table:[[String]])->AnyView{
+func getImage(selectA:Pokemon,tipsA:Pokemon,tipsB:Pokemon,j:Int,i:Int,Table:[[String]],showAnimation:Bool,showAnimationB:Bool)->AnyView{
+    let inPath = path.contains{ (pokemon) -> Bool in
+        //查看當前節點是否為路徑
+        return pokemon.x == j && pokemon.y == i
+    }
     if (selectA.x == j && selectA.y == i){
-        return AnyView(Image("\(Table[i][j])").border(Color.blue,width: 3))
-    }else if((tipsA.x == j && tipsA.y == i ) || (tipsB.x == j && tipsB.y == i )){
+        return AnyView(Image("\(Table[i][j])")
+            .scaleEffect(showAnimation ? 1.5 : 1)
+        )
+    }else if(inPath){
+        if ((path[0].x == j && path[0].y == i) || (path[path.count-1].x == j && path[path.count-1].y == i)){
+            return AnyView(Image("\(Table[i][j])")
+                .scaleEffect(showAnimationB ? 1.5 : 1)
+                .opacity(showAnimationB ? 0 : 1)
+            )
+        }
+        return AnyView(Image("星星")
+            .scaleEffect(showAnimationB ? 1.5 : 1)
+            .opacity(showAnimationB ? 0 : 1)
+        )
+    }
+    else if((tipsA.x == j && tipsA.y == i ) || (tipsB.x == j && tipsB.y == i )){
         return AnyView(Image("\(Table[i][j])").border(Color.red,width: 3))
     }else{
         return AnyView(Image("\(Table[i][j])"))
@@ -303,6 +321,8 @@ func getImage(selectA:Pokemon,tipsA:Pokemon,tipsB:Pokemon,j:Int,i:Int,Table:[[St
 }
 struct GameView: View{ //遊戲介面
     @State var Table = pokemon2DTable
+    @State var showAnimation = false
+    @State var showAnimationB = false
     @State var selectA = Pokemon()
     @State var selectB = Pokemon()
     @State var tipsA = Pokemon()
@@ -338,8 +358,10 @@ struct GameView: View{ //遊戲介面
                 }
                 Text("提示:")
                     .font(.system(size:32))
+                    .foregroundColor(Color.white)
                 Text("\(tipsTimes)")
                     .font(.system(size: 32))
+                    .foregroundColor(Color.white)
                 Button(action:{
                     if( refreshTimes > 0){
                         playSound(sound: "spell")
@@ -357,18 +379,22 @@ struct GameView: View{ //遊戲介面
                 
                 Text("洗牌:")
                     .font(.system(size: 32))
+                    .foregroundColor(Color.white)
                 Text("\(refreshTimes)")
                     .font(.system(size: 32))
+                    .foregroundColor(Color.white)
                 
                 
                 Text("分數:")
                     .font(.system(size: 32))
+                    .foregroundColor(Color.white)
                 Text("\(score)")
                     .fixedSize()
+                    .foregroundColor(Color.white)
                     .font(.system(size: 32))
                     .frame(width:100)
                 
-            }.frame(minWidth:0,maxWidth: .infinity).background(Color.yellow)
+            }.frame(minWidth:0,maxWidth: .infinity)//.background(Color.yellow)
             HStack{
                 Spacer()//左側
                 VStack{//中間位置
@@ -386,12 +412,17 @@ struct GameView: View{ //遊戲介面
                                             self.selectB.name = self.Table[i][j]
                                             self.selectB.x = j
                                             self.selectB.y = i
+                                            self.showAnimation = false
+                                            self.showAnimationB = false
                                             if (self.selectA.name == self.selectB.name && (self.selectA.x != self.selectB.x || self.selectA.y != self.selectB.y) ){//名字相同且不同位置
                                                 path = []
                                                 if(findpath(nodeX:self.selectA.x!,nodeY:self.selectA.y!,destinationX:self.selectB.x!,destinationY:self.selectB.y!,Table:self.Table)){
                                                     //如果有找到連接之路徑則顯示路徑
-                                                    for item in path{
-                                                        self.Table[item.y!][item.x!] = "星星"
+//                                                    for item in path{
+//                                                        self.Table[item.y!][item.x!] = "星星"
+//                                                    }
+                                                    withAnimation(Animation.linear(duration: 0.5)){
+                                                        self.showAnimationB = true
                                                     }
                                                     score = score + 100
                                                     playSound(sound: "hit")
@@ -414,16 +445,24 @@ struct GameView: View{ //遊戲介面
                                             for item in path{
                                                 self.Table[item.y!][item.x!] = "無"
                                             }
+                                            path = []
                                             self.tipsA = Pokemon()
                                             self.tipsB = Pokemon()
                                             playSound(sound: "select")
+                                            withAnimation(Animation.linear(duration: 0.2)){
+                                                self.showAnimation = true
+                                            }
                                         }
                                     }
                                     //Button Action
                                 }){
                                     //ButtonStyle
-                                    getImage(selectA: self.selectA, tipsA: self.tipsA, tipsB: self.tipsB, j: j, i: i, Table: self.Table)
-                                }.buttonStyle(PlainButtonStyle())//避免按鈕顏色覆蓋圖片
+                                    getImage(selectA: self.selectA,tipsA: self.tipsA, tipsB: self.tipsB, j: j, i: i, Table: self.Table,showAnimation:self.showAnimation,showAnimationB:self.showAnimationB)
+                                    }.buttonStyle(PlainButtonStyle())//避免按鈕顏色覆蓋圖片
+                                    .onAppear(perform:{
+                                       
+
+                                    })
                             }
                         }
                     }
@@ -431,7 +470,7 @@ struct GameView: View{ //遊戲介面
                 Spacer()//右側
             }
             Spacer()
-        }
+        }.background(Color.black.opacity(0.3))
     }
 }
 struct ContentView_Previews: PreviewProvider {
