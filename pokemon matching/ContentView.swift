@@ -193,6 +193,7 @@ struct ContentView: View { //主畫面
     @State var showGameView : Bool = false //切換頁面判斷
     @State var showSetting : Bool = false //顯示遊戲設定
     @State var showIntroduction : Bool = false //顯示說明
+    @State var showAnimation : Bool  = false
     var body: some View {
         ZStack{
             VStack{
@@ -215,6 +216,7 @@ struct ContentView: View { //主畫面
                             self.showGameView = true
                             self.showIntroduction = false
                             self.showSetting = false
+                            self.showAnimation = false
                             titleAudioPlayer?.stop()
                             playSound(sound: "press")
                         }){
@@ -229,6 +231,9 @@ struct ContentView: View { //主畫面
                         
                         Button(action:{
                             self.showSetting = true
+                            withAnimation{
+                                self.showAnimation.toggle()
+                            }
                             playSound(sound: "press")
                         }){
                             Text("遊戲設定")
@@ -242,6 +247,9 @@ struct ContentView: View { //主畫面
                         
                         Button(action:{
                             self.showIntroduction = true
+                            withAnimation{
+                                self.showAnimation.toggle()
+                            }
                             playSound(sound: "press")
                         }){
                             Text("遊戲說明")
@@ -262,6 +270,7 @@ struct ContentView: View { //主畫面
                                 .font(.largeTitle)
                             Button(action:{
                                 self.showSetting = false
+                                self.showAnimation = false
                                 playSound(sound: "press")
                             }){
                                 Text("Close")
@@ -277,6 +286,7 @@ struct ContentView: View { //主畫面
                             Text("兩隻寶可夢間有路徑，並轉折兩次以內即可消除")
                             Button(action:{
                                 self.showIntroduction = false
+                                self.showAnimation = false
                                 playSound(sound: "press")
                             }){
                                 Text("Close").padding()
@@ -286,7 +296,10 @@ struct ContentView: View { //主畫面
                                     .cornerRadius(8)
                             }
                         }
-                    }.frame(width: UIScreen.main.bounds.width/2, height: UIScreen.main.bounds.height*2/3, alignment: .center).background(Color.white)
+                    }.frame(width: self.showAnimation ? UIScreen.main.bounds.width/2 : 0, height: self.showAnimation ? UIScreen.main.bounds.height*2/3 : 0, alignment: .center)
+                        .background(Color.white)
+                        .opacity(self.showAnimation ? 1 : 0)
+                        .cornerRadius(8)
                 }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Color.black.opacity(0.5))
             }
         }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Image("星空"))//.background(Color(red:187/255.0,green:255/255.0,blue:180/255.0))
@@ -418,9 +431,9 @@ struct GameView: View{ //遊戲介面
                                                 path = []
                                                 if(findpath(nodeX:self.selectA.x!,nodeY:self.selectA.y!,destinationX:self.selectB.x!,destinationY:self.selectB.y!,Table:self.Table)){
                                                     //如果有找到連接之路徑則顯示路徑
-//                                                    for item in path{
-//                                                        self.Table[item.y!][item.x!] = "星星"
-//                                                    }
+                                                    //                                                    for item in path{
+                                                    //                                                        self.Table[item.y!][item.x!] = "星星"
+                                                    //                                                    }
                                                     withAnimation(Animation.linear(duration: 0.5)){
                                                         self.showAnimationB = true
                                                     }
@@ -458,10 +471,10 @@ struct GameView: View{ //遊戲介面
                                 }){
                                     //ButtonStyle
                                     getImage(selectA: self.selectA,tipsA: self.tipsA, tipsB: self.tipsB, j: j, i: i, Table: self.Table,showAnimation:self.showAnimation,showAnimationB:self.showAnimationB)
-                                    }.buttonStyle(PlainButtonStyle())//避免按鈕顏色覆蓋圖片
+                                }.buttonStyle(PlainButtonStyle())//避免按鈕顏色覆蓋圖片
                                     .onAppear(perform:{
-                                       
-
+                                        
+                                        
                                     })
                             }
                         }
