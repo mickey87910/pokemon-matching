@@ -9,8 +9,8 @@
 import SwiftUI
 import AVFoundation
 let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布"]
-var pokemon1DTable:[String] = []
-var pokemon2DTable:[[String]] = []
+var pokemon1DTable:[Pokemon] = []
+var pokemon2DTable:[[Pokemon]] = []
 var path:[Pokemon] = [] //兩者路徑
 var tableWidth = 12
 var tableHeight = 6
@@ -38,6 +38,20 @@ func playSound(sound:String){
         }
     }
 }
+func Win(Table:[[Pokemon]])->Bool{
+    var Table = Table
+    for item in path{
+        Table[item.y!][item.x!].name = "無"
+    }
+    for i in Table{
+        for item in i {
+            if (item.name != "無"){
+                    return false
+            }
+        }
+    }
+    return true
+}
 func GameStart(){
     //取出n*n的寶可夢
     pokemon1DTable = []
@@ -45,10 +59,10 @@ func GameStart(){
     path = []
     score = 0
     for _ in 0...tableWidth*tableHeight/2-1 {
-        if let pokemon = pokemonList.randomElement(){
+        if let pokemonName = pokemonList.randomElement(){
             //寶可夢兩個同種類為一組
-            pokemon1DTable.append(pokemon)
-            pokemon1DTable.append(pokemon)
+            pokemon1DTable.append(Pokemon(name:pokemonName))
+            pokemon1DTable.append(Pokemon(name:pokemonName))
         }
     }
     //打散寶可夢的排序
@@ -63,9 +77,9 @@ func GameStart(){
         }
     }
 }
-func shuffleTable(table:[[String]])-> [[String]]{
-    var tmpTable:[String] = []
-    var newTable:[[String]] = []
+func shuffleTable(table:[[Pokemon]])-> [[Pokemon]]{
+    var tmpTable:[Pokemon] = []
+    var newTable:[[Pokemon]] = []
     for i in 0...tableHeight-1{
         for j in 0...tableWidth-1{
             tmpTable.append(table[i][j])
@@ -84,19 +98,19 @@ func shuffleTable(table:[[String]])-> [[String]]{
     }
     return newTable
 }
-func findTips(Table:[[String]])->(Pokemon,Pokemon){
+func findTips(Table:[[Pokemon]])->(Pokemon,Pokemon){
     var selectA = Pokemon()
     var selectB = Pokemon()
     for i in 0...tableHeight-1{
         for j in 0...tableWidth-1{
-            if(Table[i][j] != "無" && Table[i][j] != "星星"){
-                selectA.name = Table[i][j]
+            if(Table[i][j].name != "無"){
+                selectA.name = Table[i][j].name
                 selectA.x = j
                 selectA.y = i
                 for k in 0...tableHeight-1{
                     for m in 0...tableWidth-1{
-                        if (selectA.name == Table[k][m] && (i != k || j != m) ){
-                            selectB.name = Table[k][m]
+                        if (selectA.name == Table[k][m].name && (i != k || j != m) ){
+                            selectB.name = Table[k][m].name
                             selectB.x = m
                             selectB.y = k
                             if(findpath(nodeX: selectA.x!, nodeY: selectA.y!, destinationX: selectB.x!, destinationY: selectB.y!, Table: Table)){
@@ -112,15 +126,16 @@ func findTips(Table:[[String]])->(Pokemon,Pokemon){
     selectB = Pokemon()
     return (selectA,selectB)
 }
-func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[String]],nodes:[Pokemon] = [],times:Int = 0,direction:String = "NONE")->Bool{
+func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Pokemon]],nodes:[Pokemon] = [],times:Int = 0,direction:String = "NONE")->Bool{
     //初始化參數 & let to var
     var nodes = nodes
     var flag = false
     var directionList:[String] = []
-    //將當前 node 加入 nodes 陣列
     var node = Pokemon()
+    node.name = "無"
     node.x = nodeX
     node.y = nodeY
+    
     let containFlag = nodes.contains{ (pokemon) -> Bool in
         //查看當前節點是否已經走過了
         return pokemon.x == node.x && pokemon.y == node.y
@@ -129,12 +144,14 @@ func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Stri
         //轉彎超過兩次或者節點超過表格大小以及該節點是否已經走過
         return false
     }else{
+        //將當前 node 加入 nodes 陣列
         nodes.append(node)
         if (nodeX == destinationX && nodeY == destinationY){
             //如果當前這個位置抵達目的地
+            nodes[nodes.count-1].direction = "tail"
             path = nodes
             return true
-        }else if(Table[nodeY][nodeX] != "無" && direction != "NONE"){
+        }else if(Table[nodeY][nodeX].name != "無" && direction != "NONE"){
             //如果當前節點不可行走(初始起點不算)
             return false
         }else{
@@ -151,12 +168,13 @@ func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Stri
                 else if (directionList[i] == "RIGHT"){x = 1;y = 0}
                 else if (directionList[i] == "UP"){x = 0;y = -1}
                 else if (directionList[i] == "DOWN"){x = 0;y = 1}
-                
                 if(flag != true){
                     if (direction == directionList[i] || direction == "NONE"){
+                        nodes[nodes.count-1].direction = getDirectionNumber(oldDirection: direction, newDirection: directionList[i],directionChanged: false)
                         flag = findpath(nodeX: nodeX+x, nodeY: nodeY+y, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times, direction: directionList[i])
                     }else{
                         //如果將行走方向與原方向不同代表轉彎
+                        nodes[nodes.count-1].direction = getDirectionNumber(oldDirection: direction, newDirection: directionList[i],directionChanged: true)
                         flag = findpath(nodeX: nodeX+x, nodeY: nodeY+y, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times+1, direction: directionList[i])
                     }
                 }
@@ -164,6 +182,20 @@ func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Stri
         }
     }
     return flag
+}
+func getDirectionNumber(oldDirection : String , newDirection : String , directionChanged : Bool)->String?{
+    if (directionChanged == false){ //方向沒改
+        if ((oldDirection == "RIGHT" || oldDirection == "LEFT") && (newDirection == "LEFT" || newDirection == "RIGHT")){ return "D456"}
+        else if ((oldDirection == "UP" || oldDirection == "DOWN") && (newDirection == "DOWN" || newDirection == "UP")){ return "D258"}
+        else{ return "head"}
+    }else{ //方向變更
+        if ((oldDirection == "RIGHT" && newDirection == "UP") || (oldDirection == "DOWN" && newDirection == "LEFT")){ return "D236"}//右to上 下to左
+        else if ((oldDirection == "UP" && newDirection == "LEFT") || (oldDirection == "RIGHT" && newDirection == "DOWN")){ return "D698"}//上to左 右to下
+        else if ((oldDirection == "UP" && newDirection == "RIGHT") || (oldDirection == "LEFT" && newDirection == "DOWN")){ return "D478"}//上to右 左to下
+        else if ((oldDirection == "DOWN" && newDirection == "RIGHT") || (oldDirection == "LEFT" && newDirection == "UP")){ return "D214"}//左to上 //下to右
+        
+    }
+    return nil
 }
 func getDirectionList(location:String)->[String]{
     //決定尋找方向的順序
@@ -188,6 +220,7 @@ struct Pokemon{
     var name:String?
     var x:Int?
     var y:Int?
+    var direction:String?
 }
 struct ContentView: View { //主畫面
     @State var showGameView : Bool = false //切換頁面判斷
@@ -305,33 +338,45 @@ struct ContentView: View { //主畫面
         }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Image("星空"))//.background(Color(red:187/255.0,green:255/255.0,blue:180/255.0))
     }
 }
-func getImage(selectA:Pokemon,tipsA:Pokemon,tipsB:Pokemon,j:Int,i:Int,Table:[[String]],showAnimation:Bool,showAnimationB:Bool)->AnyView{
+func getImage(selectA:Pokemon,tipsA:Pokemon,tipsB:Pokemon,j:Int,i:Int,Table:[[Pokemon]],showAnimation:Bool,showAnimationB:Bool)->AnyView{
     let inPath = path.contains{ (pokemon) -> Bool in
         //查看當前節點是否為路徑
         return pokemon.x == j && pokemon.y == i
     }
+    var pathPokemon = Pokemon()
+    for pokemon in path {
+        if (pokemon.x == j && pokemon.y == i){
+            pathPokemon = pokemon
+        }
+    }
     if (selectA.x == j && selectA.y == i){
-        return AnyView(Image("\(Table[i][j])")
+        //放大選擇的寶可夢
+        return AnyView(Image("\(Table[i][j].name!)")
             .scaleEffect(showAnimation ? 1.5 : 1)
         )
     }else if(inPath){
         if ((path[0].x == j && path[0].y == i) || (path[path.count-1].x == j && path[path.count-1].y == i)){
-            return AnyView(Image("\(Table[i][j])")
+            //path頭尾動畫
+            return AnyView(Image("\(Table[i][j].name!)")
                 .scaleEffect(showAnimationB ? 1.5 : 1)
                 .opacity(showAnimationB ? 0 : 1)
             )
+        }else{
+            //path路徑動畫
+            return AnyView(Image("\(pathPokemon.direction!)")
+                .scaleEffect(1.2)
+                .opacity(showAnimationB ? 0 : 1))
+            
         }
-        return AnyView(Image("星星")
-            .scaleEffect(showAnimationB ? 1.5 : 1)
-            .opacity(showAnimationB ? 0 : 1)
-        )
     }
     else if((tipsA.x == j && tipsA.y == i ) || (tipsB.x == j && tipsB.y == i )){
-        return AnyView(Image("\(Table[i][j])").border(Color.red,width: 3))
+        //圈出提示的位置
+        return AnyView(Image("\(Table[i][j].name!)").border(Color.red,width: 3))
     }else{
-        return AnyView(Image("\(Table[i][j])"))
+        return AnyView(Image("\(Table[i][j].name!)"))
     }
 }
+
 struct GameView: View{ //遊戲介面
     @State var Table = pokemon2DTable
     @State var showAnimation = false
@@ -356,7 +401,7 @@ struct GameView: View{ //遊戲介面
                     if (tipsTimes > 0) {
                         playSound(sound: "spell")
                         for item in path{
-                            self.Table[item.y!][item.x!] = "無"
+                            self.Table[item.y!][item.x!].name = "無"
                         }
                         (self.tipsA , self.tipsB) = findTips(Table: self.Table)
                         if (self.tipsA.name != nil && self.tipsB.name != nil){
@@ -379,7 +424,7 @@ struct GameView: View{ //遊戲介面
                     if( refreshTimes > 0){
                         playSound(sound: "spell")
                         for item in path{
-                            self.Table[item.y!][item.x!] = "無"
+                            self.Table[item.y!][item.x!].name = "無"
                         }
                         path = []
                         self.Table = shuffleTable(table:self.Table)
@@ -416,13 +461,13 @@ struct GameView: View{ //遊戲介面
                             ForEach(0...tableWidth-1,id:\.self){ j in
                                 Button(action:{
                                     //Button Action
-                                    if (self.Table[i][j] == "無" || self.Table[i][j] == "星星"){
+                                    if (self.Table[i][j].name == "無" || self.Table[i][j].name == "星星"){
                                         self.selectA = Pokemon()
                                         self.selectB = Pokemon()
                                     }else{
                                         if (self.selectA.name != nil){
                                             //如果A可夢已經被選取則設定B可夢
-                                            self.selectB.name = self.Table[i][j]
+                                            self.selectB.name = self.Table[i][j].name
                                             self.selectB.x = j
                                             self.selectB.y = i
                                             self.showAnimation = false
@@ -430,13 +475,10 @@ struct GameView: View{ //遊戲介面
                                             if (self.selectA.name == self.selectB.name && (self.selectA.x != self.selectB.x || self.selectA.y != self.selectB.y) ){//名字相同且不同位置
                                                 path = []
                                                 if(findpath(nodeX:self.selectA.x!,nodeY:self.selectA.y!,destinationX:self.selectB.x!,destinationY:self.selectB.y!,Table:self.Table)){
-                                                    //如果有找到連接之路徑則顯示路徑
-                                                    //                                                    for item in path{
-                                                    //                                                        self.Table[item.y!][item.x!] = "星星"
-                                                    //                                                    }
                                                     withAnimation(Animation.linear(duration: 0.5)){
                                                         self.showAnimationB = true
                                                     }
+                                                    print(Win(Table:self.Table))
                                                     score = score + 100
                                                     playSound(sound: "hit")
                                                 }else{
@@ -452,11 +494,11 @@ struct GameView: View{ //遊戲介面
                                             self.selectA = Pokemon()
                                             self.selectB = Pokemon()
                                         }else{//如果還沒選則設定A可夢
-                                            self.selectA.name = self.Table[i][j]
+                                            self.selectA.name = self.Table[i][j].name
                                             self.selectA.x = j
                                             self.selectA.y = i
                                             for item in path{
-                                                self.Table[item.y!][item.x!] = "無"
+                                                self.Table[item.y!][item.x!].name = "無"
                                             }
                                             path = []
                                             self.tipsA = Pokemon()
@@ -472,10 +514,6 @@ struct GameView: View{ //遊戲介面
                                     //ButtonStyle
                                     getImage(selectA: self.selectA,tipsA: self.tipsA, tipsB: self.tipsB, j: j, i: i, Table: self.Table,showAnimation:self.showAnimation,showAnimationB:self.showAnimationB)
                                 }.buttonStyle(PlainButtonStyle())//避免按鈕顏色覆蓋圖片
-                                    .onAppear(perform:{
-                                        
-                                        
-                                    })
                             }
                         }
                     }
