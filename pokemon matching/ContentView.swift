@@ -9,6 +9,7 @@
 import SwiftUI
 import AVFoundation
 let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布"]
+let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect() //倒數計時Timer
 var pokemon1DTable:[Pokemon] = []
 var pokemon2DTable:[[Pokemon]] = []
 var path:[Pokemon] = [] //兩者路徑
@@ -316,7 +317,18 @@ struct ContentView: View { //主畫面
                         }else if(self.showIntroduction == true){ //遊戲說明視窗
                             Text("遊戲說明")
                                 .font(.largeTitle)
+                                .padding([.top,.bottom],10)
                             Text("兩隻寶可夢間有路徑，並轉折兩次以內即可消除")
+                            Image("intro1").resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 230, height: 70)
+                            Image("intro2").resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 230, height: 70)
+                            Text("成功消除可延長5秒，連續消除可獲得分數加成")
+                                .padding([.bottom],10)
+                            Text("成功消除所有寶可夢即可獲勝")
+                                .padding([.bottom],10)
                             Button(action:{
                                 self.showIntroduction = false
                                 self.showAnimation = false
@@ -324,15 +336,16 @@ struct ContentView: View { //主畫面
                             }){
                                 Text("Close").padding()
                                     .background(Color.white)
-                                    .font(.system(size: 26))
+                                    .font(.system(size: 20))
                                     .border(Color.blue,width:3)
                                     .cornerRadius(8)
                             }
                         }
-                    }.frame(width: self.showAnimation ? UIScreen.main.bounds.width/2 : 0, height: self.showAnimation ? UIScreen.main.bounds.height*2/3 : 0, alignment: .center)
+                    }.frame(width: self.showAnimation ? UIScreen.main.bounds.width/2 : 0, height: self.showAnimation ? UIScreen.main.bounds.height*17/18 : 0, alignment: .center)
                         .background(Color.white)
                         .opacity(self.showAnimation ? 1 : 0)
                         .cornerRadius(8)
+                    
                 }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Color.black.opacity(0.5))
             }
         }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Image("星空"))//.background(Color(red:187/255.0,green:255/255.0,blue:180/255.0))
@@ -385,16 +398,38 @@ struct GameView: View{ //遊戲介面
     @State var selectB = Pokemon()
     @State var tipsA = Pokemon()
     @State var tipsB = Pokemon()
+    @State var gameTime = 180 //遊戲時間
+    @State var progressValue: Float = 1.0
     var body: some View{
         VStack{
             HStack{
                 Button(action:{
                     GameStart()
                     self.Table = pokemon2DTable
+                    self.gameTime = 180   //重設時將倒數恢復為180
                 }){
                     Image("close").foregroundColor(Color.red)
+                    Text("時間:")
+                        .font(.system(size:32))
+                        .foregroundColor(Color.white)
+                    
+                    ProgressBar(progress: self.$progressValue)
+                    .frame(width: 45.0, height: 45.0)
+                    .padding(10.0)
+                    
+                    Text("\(gameTime)")   //倒數計時
+                        .font(.system(size:32))
+                        .foregroundColor(Color.white)
+                        .onReceive(timer) { _ in
+                            if self.gameTime > 0 {
+                                self.gameTime -= 1
+                                self.progressValue -= 100/18000
+                            }
+                        }
                 }
+                
                 Spacer()
+                
                 
                 Button(action:{
                     //do 提示
@@ -452,6 +487,10 @@ struct GameView: View{ //遊戲介面
                     .font(.system(size: 32))
                     .frame(width:100)
                 
+                
+                
+                    
+                
             }.frame(minWidth:0,maxWidth: .infinity)//.background(Color.yellow)
             HStack{
                 Spacer()//左側
@@ -480,6 +519,15 @@ struct GameView: View{ //遊戲介面
                                                     }
                                                     print(Win(Table:self.Table))
                                                     score = score + 100
+                                                    
+                                                    if (self.gameTime + 5 >= 180){   //時間規則：成功配對加五秒（上限180秒）
+                                                        self.gameTime = 180
+                                                        self.progressValue = 1.0
+                                                    }else{
+                                                        self.gameTime += 5
+                                                        self.progressValue += 500/18000
+                                                    }
+                                                    
                                                     playSound(sound: "hit")
                                                 }else{
                                                     //如果找不到連接之路徑
@@ -529,3 +577,28 @@ struct ContentView_Previews: PreviewProvider {
         ContentView().previewLayout(.fixed(width:896,height:414))
     }
 }
+//計時
+struct ProgressBar: View {
+    @Binding var progress: Float
+    
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(lineWidth: 10.0)
+                .foregroundColor(Color.yellow)
+                .opacity(0.3)
+            Circle()
+                .trim(from: 0.0, to: CGFloat(min(self.progress, 1.0)))
+                .stroke(style: StrokeStyle(lineWidth: 10.0, lineCap: .round, lineJoin: .round))
+                .foregroundColor(Color.yellow)
+                
+                .rotationEffect(Angle(degrees: 270.0))
+                .animation(.linear)
+
+            
+        }
+    }
+}
+//遊戲說明
+//遊戲設定
+//結算的視窗
