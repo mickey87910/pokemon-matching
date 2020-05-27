@@ -9,7 +9,6 @@
 import SwiftUI
 import AVFoundation
 let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布"]
-let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect() //倒數計時Timer
 var pokemon1DTable:[Pokemon] = []
 var pokemon2DTable:[[Pokemon]] = []
 var path:[Pokemon] = [] //兩者路徑
@@ -19,7 +18,6 @@ var score = 0 //分數
 var level = "" //難易度
 var refreshTimes = 30 //洗牌次數
 var tipsTimes = 30 //提示次數
-var gameTime = 180 //遊戲時間
 var titleAudioPlayer : AVAudioPlayer? //主畫面音樂
 var audioPlayer : AVAudioPlayer? //音效
 func playSound(sound:String){
@@ -391,185 +389,286 @@ func getImage(selectA:Pokemon,tipsA:Pokemon,tipsB:Pokemon,j:Int,i:Int,Table:[[Po
 }
 
 struct GameView: View{ //遊戲介面
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect() //倒數計時Timer
     @State var Table = pokemon2DTable
     @State var showAnimation = false
     @State var showAnimationB = false
+    @State var showAttention = false
+    @State var showGrade = false
     @State var selectA = Pokemon()
     @State var selectB = Pokemon()
     @State var tipsA = Pokemon()
     @State var tipsB = Pokemon()
-    @State var gameTime = 180 //遊戲時間
+    @State var gameTime = 10 //遊戲時間
+    @State private var isActive = true
     @State var progressValue: Float = 1.0
     var body: some View{
-        VStack{
-            HStack{
-                Button(action:{
-                    GameStart()
-                    self.Table = pokemon2DTable
-                    self.gameTime = 180   //重設時將倒數恢復為180
-                }){
-                    Image("close").foregroundColor(Color.red)
-                    Text("時間:")
-                        .font(.system(size:32))
-                        .foregroundColor(Color.white)
+        ZStack{
+            VStack{
+                HStack{
+                    Button(action:{
+                        self.showAttention = true
+                        self.isActive = false
+                    }){
+                        Image("close").foregroundColor(Color.red)
+                        Text("時間:")
+                            .font(.system(size:32))
+                            .foregroundColor(Color.white)
+                        
+                        ProgressBar(progress: self.$progressValue)
+                        .frame(width: 45.0, height: 45.0)
+                        .padding(10.0)
+                        
+                        Text("\(gameTime)")   //倒數計時
+                            .font(.system(size:32))
+                            .foregroundColor(Color.white)
+                            .onReceive(timer) { _ in
+                                if (self.gameTime > 0) {
+                                    self.gameTime -= 1
+                                    self.progressValue -= 100/18000
+                                }else{
+                                    self.showGrade = true
+                                }
+                            }
+                    }
                     
-                    ProgressBar(progress: self.$progressValue)
-                    .frame(width: 45.0, height: 45.0)
-                    .padding(10.0)
+                    Spacer()
                     
-                    Text("\(gameTime)")   //倒數計時
-                        .font(.system(size:32))
-                        .foregroundColor(Color.white)
-                        .onReceive(timer) { _ in
-                            if self.gameTime > 0 {
-                                self.gameTime -= 1
-                                self.progressValue -= 100/18000
+                    Button(action:{
+                        //do 提示
+                        if (tipsTimes > 0) {
+                            playSound(sound: "spell")
+                            for item in path{
+                                self.Table[item.y!][item.x!].name = "無"
+                            }
+                            (self.tipsA , self.tipsB) = findTips(Table: self.Table)
+                            if (self.tipsA.name != nil && self.tipsB.name != nil){
+                                tipsTimes -= 1
+                                path = []
+                            }else{
+                                print("找不到解")
                             }
                         }
-                }
-                
-                Spacer()
-                
-                
-                Button(action:{
-                    //do 提示
-                    if (tipsTimes > 0) {
-                        playSound(sound: "spell")
-                        for item in path{
-                            self.Table[item.y!][item.x!].name = "無"
-                        }
-                        (self.tipsA , self.tipsB) = findTips(Table: self.Table)
-                        if (self.tipsA.name != nil && self.tipsB.name != nil){
-                            tipsTimes -= 1
+                    }){
+                        Image("tips").foregroundColor(Color.green)
+                    }
+                    Text("提示:")
+                        .font(.system(size:32))
+                        .foregroundColor(Color.white)
+                    Text("\(tipsTimes)")
+                        .font(.system(size: 32))
+                        .foregroundColor(Color.white)
+                    Button(action:{
+                        if( refreshTimes > 0){
+                            playSound(sound: "spell")
+                            for item in path{
+                                self.Table[item.y!][item.x!].name = "無"
+                            }
                             path = []
-                        }else{
-                            print("找不到解")
+                            self.Table = shuffleTable(table:self.Table)
+                            refreshTimes -= 1
+                            
                         }
+                    }){
+                        Image("refresh").foregroundColor(Color.blue)
                     }
-                }){
-                    Image("tips").foregroundColor(Color.green)
-                }
-                Text("提示:")
-                    .font(.system(size:32))
-                    .foregroundColor(Color.white)
-                Text("\(tipsTimes)")
-                    .font(.system(size: 32))
-                    .foregroundColor(Color.white)
-                Button(action:{
-                    if( refreshTimes > 0){
-                        playSound(sound: "spell")
-                        for item in path{
-                            self.Table[item.y!][item.x!].name = "無"
-                        }
-                        path = []
-                        self.Table = shuffleTable(table:self.Table)
-                        refreshTimes -= 1
-                        
-                    }
-                }){
-                    Image("refresh").foregroundColor(Color.blue)
-                }
-                
-                Text("洗牌:")
-                    .font(.system(size: 32))
-                    .foregroundColor(Color.white)
-                Text("\(refreshTimes)")
-                    .font(.system(size: 32))
-                    .foregroundColor(Color.white)
-                
-                
-                Text("分數:")
-                    .font(.system(size: 32))
-                    .foregroundColor(Color.white)
-                Text("\(score)")
-                    .fixedSize()
-                    .foregroundColor(Color.white)
-                    .font(.system(size: 32))
-                    .frame(width:100)
-                
-                
-                
                     
-                
-            }.frame(minWidth:0,maxWidth: .infinity)//.background(Color.yellow)
-            HStack{
-                Spacer()//左側
-                VStack{//中間位置
-                    ForEach(0...tableHeight-1,id:\.self){ i in
-                        HStack{
-                            ForEach(0...tableWidth-1,id:\.self){ j in
-                                Button(action:{
-                                    //Button Action
-                                    if (self.Table[i][j].name == "無" || self.Table[i][j].name == "星星"){
-                                        self.selectA = Pokemon()
-                                        self.selectB = Pokemon()
-                                    }else{
-                                        if (self.selectA.name != nil){
-                                            //如果A可夢已經被選取則設定B可夢
-                                            self.selectB.name = self.Table[i][j].name
-                                            self.selectB.x = j
-                                            self.selectB.y = i
-                                            self.showAnimation = false
-                                            self.showAnimationB = false
-                                            if (self.selectA.name == self.selectB.name && (self.selectA.x != self.selectB.x || self.selectA.y != self.selectB.y) ){//名字相同且不同位置
-                                                path = []
-                                                if(findpath(nodeX:self.selectA.x!,nodeY:self.selectA.y!,destinationX:self.selectB.x!,destinationY:self.selectB.y!,Table:self.Table)){
-                                                    withAnimation(Animation.linear(duration: 0.5)){
-                                                        self.showAnimationB = true
-                                                    }
-                                                    print(Win(Table:self.Table))
-                                                    score = score + 100
-                                                    
-                                                    if (self.gameTime + 5 >= 180){   //時間規則：成功配對加五秒（上限180秒）
-                                                        self.gameTime = 180
-                                                        self.progressValue = 1.0
-                                                    }else{
-                                                        self.gameTime += 5
-                                                        self.progressValue += 500/18000
-                                                    }
-                                                    
-                                                    playSound(sound: "hit")
-                                                }else{
-                                                    //如果找不到連接之路徑
-                                                    print("找無路徑")
-                                                    playSound(sound:"miss")
-                                                }
-                                            }else{//名字不相同或者點選到同一隻
-                                                print("取消選擇")
-                                                playSound(sound:"miss")
-                                            }
-                                            //重設
+                    Text("洗牌:")
+                        .font(.system(size: 32))
+                        .foregroundColor(Color.white)
+                    Text("\(refreshTimes)")
+                        .font(.system(size: 32))
+                        .foregroundColor(Color.white)
+                    
+                    
+                    Text("分數:")
+                        .font(.system(size: 32))
+                        .foregroundColor(Color.white)
+                    Text("\(score)")
+                        .fixedSize()
+                        .foregroundColor(Color.white)
+                        .font(.system(size: 32))
+                        .frame(width:100)
+                    
+                    
+                    
+                        
+                    
+                }.frame(minWidth:0,maxWidth: .infinity)//.background(Color.yellow)
+                HStack{
+                    Spacer()//左側
+                    VStack{//中間位置
+                        ForEach(0...tableHeight-1,id:\.self){ i in
+                            HStack{
+                                ForEach(0...tableWidth-1,id:\.self){ j in
+                                    Button(action:{
+                                        //Button Action
+                                        if (self.Table[i][j].name == "無" || self.Table[i][j].name == "星星"){
                                             self.selectA = Pokemon()
                                             self.selectB = Pokemon()
-                                        }else{//如果還沒選則設定A可夢
-                                            self.selectA.name = self.Table[i][j].name
-                                            self.selectA.x = j
-                                            self.selectA.y = i
-                                            for item in path{
-                                                self.Table[item.y!][item.x!].name = "無"
-                                            }
-                                            path = []
-                                            self.tipsA = Pokemon()
-                                            self.tipsB = Pokemon()
-                                            playSound(sound: "select")
-                                            withAnimation(Animation.linear(duration: 0.2)){
-                                                self.showAnimation = true
+                                        }else{
+                                            if (self.selectA.name != nil){
+                                                //如果A可夢已經被選取則設定B可夢
+                                                self.selectB.name = self.Table[i][j].name
+                                                self.selectB.x = j
+                                                self.selectB.y = i
+                                                self.showAnimation = false
+                                                self.showAnimationB = false
+                                                if (self.selectA.name == self.selectB.name && (self.selectA.x != self.selectB.x || self.selectA.y != self.selectB.y) ){//名字相同且不同位置
+                                                    path = []
+                                                    if(findpath(nodeX:self.selectA.x!,nodeY:self.selectA.y!,destinationX:self.selectB.x!,destinationY:self.selectB.y!,Table:self.Table)){
+                                                        withAnimation(Animation.linear(duration: 0.5)){
+                                                            self.showAnimationB = true
+                                                        }
+                                                        print(Win(Table:self.Table))
+                                                        self.showGrade = Win(Table:self.Table)
+                                                        score = score + 100
+                                                        
+                                                        if (self.gameTime + 5 >= 180){   //時間規則：成功配對加五秒（上限180秒）
+                                                            self.gameTime = 180
+                                                            self.progressValue = 1.0
+                                                        }else{
+                                                            self.gameTime += 5
+                                                            self.progressValue += 500/18000
+                                                        }
+                                                        
+                                                        playSound(sound: "hit")
+                                                    }else{
+                                                        //如果找不到連接之路徑
+                                                        print("找無路徑")
+                                                        playSound(sound:"miss")
+                                                    }
+                                                }else{//名字不相同或者點選到同一隻
+                                                    print("取消選擇")
+                                                    playSound(sound:"miss")
+                                                }
+                                                //重設
+                                                self.selectA = Pokemon()
+                                                self.selectB = Pokemon()
+                                            }else{//如果還沒選則設定A可夢
+                                                self.selectA.name = self.Table[i][j].name
+                                                self.selectA.x = j
+                                                self.selectA.y = i
+                                                for item in path{
+                                                    self.Table[item.y!][item.x!].name = "無"
+                                                }
+                                                path = []
+                                                self.tipsA = Pokemon()
+                                                self.tipsB = Pokemon()
+                                                playSound(sound: "select")
+                                                withAnimation(Animation.linear(duration: 0.2)){
+                                                    self.showAnimation = true
+                                                }
                                             }
                                         }
-                                    }
-                                    //Button Action
-                                }){
-                                    //ButtonStyle
-                                    getImage(selectA: self.selectA,tipsA: self.tipsA, tipsB: self.tipsB, j: j, i: i, Table: self.Table,showAnimation:self.showAnimation,showAnimationB:self.showAnimationB)
-                                }.buttonStyle(PlainButtonStyle())//避免按鈕顏色覆蓋圖片
+                                        //Button Action
+                                    }){
+                                        //ButtonStyle
+                                        getImage(selectA: self.selectA,tipsA: self.tipsA, tipsB: self.tipsB, j: j, i: i, Table: self.Table,showAnimation:self.showAnimation,showAnimationB:self.showAnimationB)
+                                    }.buttonStyle(PlainButtonStyle())//避免按鈕顏色覆蓋圖片
+                                }
                             }
                         }
                     }
+                    Spacer()//右側
                 }
-                Spacer()//右側
+                Spacer()
+            }.background(Color.black.opacity(0.3))
+             
+
+            if(self.showAttention){
+                ZStack{
+                    VStack{
+                        //遊戲重新視窗
+                            Text("是否要重新開始")
+                                .font(.largeTitle)
+                                .padding(10)
+                            HStack{
+                                Button(action:{
+                                    self.showAttention = false
+                                    GameStart()
+                                    self.Table = pokemon2DTable
+                                    self.gameTime = 180   //重設時將倒數恢復為180
+                                    self.progressValue = 1.0
+                                    playSound(sound: "press")
+                                }){
+                                    Text("是")
+                                        .padding()
+                                        .background(Color.white)
+                                        .font(.system(size: 26))
+                                        .border(Color.blue,width:3)
+                                        .cornerRadius(8)
+                                }.padding(10)
+                                
+                                Button(action:{
+                                    self.showAttention = false
+                                    playSound(sound: "press")
+                                }){
+                                    Text("否")
+                                        .padding()
+                                        .background(Color.white)
+                                        .font(.system(size: 26))
+                                        .border(Color.blue,width:3)
+                                        .cornerRadius(8)
+                                }.padding(10)
+                            }
+                        
+                    }.frame(width: self.showAttention ? UIScreen.main.bounds.width/2 : 0, height: self.showAttention ? UIScreen.main.bounds.height/2 : 0, alignment: .center)
+                        .background(Color.white)
+                        .opacity(self.showAttention ? 1 : 0)
+                        .cornerRadius(8)
+                    
+                }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Color.black.opacity(0.5))
             }
-            Spacer()
-        }.background(Color.black.opacity(0.3))
+            
+            if(showGrade){
+                ZStack{
+                    VStack{
+                         //遊戲說明視窗
+                        if(Win(Table:self.Table)){
+                            Text("過關！")
+                                .font(.largeTitle)
+                                .padding([.top,.bottom],10)
+                            Button(action:{
+                                self.showGrade = false
+                                playSound(sound: "press")
+                            }){
+                                Text("Continue").padding()
+                                    .background(Color.white)
+                                    .font(.system(size: 20))
+                                    .border(Color.blue,width:3)
+                                    .cornerRadius(8)
+                            }
+                        }else{
+                            Text("Gamer Over")
+                                .font(.largeTitle)
+                                .padding([.top,.bottom],10)
+                            Button(action:{
+                                self.showGrade = false
+                                GameStart()
+                                self.Table = pokemon2DTable
+                                self.gameTime = 180   //重設時將倒數恢復為180
+                                self.progressValue = 1.0
+                                playSound(sound: "press")
+                            }){
+                                Text("Restart").padding()
+                                    .background(Color.white)
+                                    .font(.system(size: 20))
+                                    .border(Color.blue,width:3)
+                                    .cornerRadius(8)
+                            }
+                        }
+                            
+                    }.frame(width: self.showGrade ? UIScreen.main.bounds.width/3 : 0, height: self.showGrade ? UIScreen.main.bounds.height/2 : 0, alignment: .center)
+                        .background(Color.white)
+                        .opacity(self.showGrade ? 1 : 0)
+                        .cornerRadius(8)
+                    
+                }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Color.black.opacity(0.5))
+            }
+            
+        }
+        
     }
 }
 struct ContentView_Previews: PreviewProvider {
