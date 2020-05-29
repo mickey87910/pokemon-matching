@@ -305,7 +305,7 @@ struct ContentView: View { //主畫面
                                 self.showAnimation = false
                                 playSound(sound: "press")
                             }){
-                                Text("Close")
+                                Text("關閉")
                                     .padding()
                                     .background(Color.white)
                                     .font(.system(size: 26))
@@ -332,7 +332,7 @@ struct ContentView: View { //主畫面
                                 self.showAnimation = false
                                 playSound(sound: "press")
                             }){
-                                Text("Close").padding()
+                                Text("關閉").padding()
                                     .background(Color.white)
                                     .font(.system(size: 20))
                                     .border(Color.blue,width:3)
@@ -400,18 +400,20 @@ struct GameView: View{ //遊戲介面
     @State var tipsA = Pokemon()
     @State var tipsB = Pokemon()
     @State var gameTime = 10 //遊戲時間
-    @State private var isActive = true
-    @State var progressValue: Float = 1.0
+    @State var progressValue: Float = 1.0  //時間進度條
+    @State var combeCount = 0    //  目前連擊分數
+    @State var combeCountMax = 0 //  最大連擊
+    @State var combeScore = 0  //  連擊分數
+    @State var timeBonus = 0  //   時間分數
     var body: some View{
         ZStack{
             VStack{
                 HStack{
                     Button(action:{
                         self.showAttention = true
-                        self.isActive = false
                     }){
                         Image("close").foregroundColor(Color.red)
-                        Text("時間:")
+                        Text("時間:")    //   時間
                             .font(.system(size:32))
                             .foregroundColor(Color.white)
                         
@@ -426,7 +428,7 @@ struct GameView: View{ //遊戲介面
                                 if (self.gameTime > 0) {
                                     self.gameTime -= 1
                                     self.progressValue -= 100/18000
-                                }else{
+                                }else if(!self.showGrade){
                                     self.showGrade = true
                                 }
                             }
@@ -521,8 +523,18 @@ struct GameView: View{ //遊戲介面
                                                             self.showAnimationB = true
                                                         }
                                                         print(Win(Table:self.Table))
-                                                        self.showGrade = Win(Table:self.Table)
-                                                        score = score + 100
+                                                        self.showGrade = Win(Table:self.Table) //   過關判定
+                                                        self.combeCount += 1   //   連擊相關加分設定
+                                                        if (self.combeCount >= 2) {
+                                                            self.combeScore += 200
+                                                            score = score + 100 + 200
+                                                        }else {
+                                                            score = score + 100
+                                                        }
+                                                        if (self.combeCount >= self.combeCountMax) {
+                                                            self.combeCountMax = self.combeCount
+                                                        }
+                                                        
                                                         
                                                         if (self.gameTime + 5 >= 180){   //時間規則：成功配對加五秒（上限180秒）
                                                             self.gameTime = 180
@@ -531,15 +543,23 @@ struct GameView: View{ //遊戲介面
                                                             self.gameTime += 5
                                                             self.progressValue += 500/18000
                                                         }
-                                                        
+                                                        self.timeBonus = self.gameTime * 100
                                                         playSound(sound: "hit")
                                                     }else{
                                                         //如果找不到連接之路徑
                                                         print("找無路徑")
+                                                        if (self.combeCount >= self.combeCountMax) {
+                                                            self.combeCountMax = self.combeCount
+                                                        }
+                                                        self.combeCount = 0  //   連擊分數歸零
                                                         playSound(sound:"miss")
                                                     }
                                                 }else{//名字不相同或者點選到同一隻
                                                     print("取消選擇")
+                                                    if (self.combeCount >= self.combeCountMax) {
+                                                        self.combeCountMax = self.combeCount
+                                                    }
+                                                    self.combeCount = 0
                                                     playSound(sound:"miss")
                                                 }
                                                 //重設
@@ -588,8 +608,11 @@ struct GameView: View{ //遊戲介面
                                     self.showAttention = false
                                     GameStart()
                                     self.Table = pokemon2DTable
-                                    self.gameTime = 180   //重設時將倒數恢復為180
+                                    self.gameTime = 180   //重設以下設定
                                     self.progressValue = 1.0
+                                    self.combeCount = 0
+                                    self.combeCountMax = 0
+                                    self.combeScore = 0
                                     playSound(sound: "press")
                                 }){
                                     Text("是")
@@ -623,47 +646,114 @@ struct GameView: View{ //遊戲介面
             
             if(showGrade){
                 ZStack{
-                    VStack{
-                         //遊戲說明視窗
-                        if(Win(Table:self.Table)){
-                            Text("過關！")
-                                .font(.largeTitle)
-                                .padding([.top,.bottom],10)
+                     //遊戲結算視窗
+                    if(Win(Table:self.Table)){
+                        VStack{
+                            HStack{
+                                Text("過關!")
+                                    .font(.system(size: 40))
+                                    .padding([.top,.bottom],20)
+                                    .foregroundColor(Color.red)
+                            }
+                            HStack{
+                                Text("最大連擊:")
+                                    .fixedSize()
+                                    .font(.system(size: 20))
+                                    .padding([.bottom],8)
+                                    .frame(width:100)
+                                Text("\(self.combeCountMax)")
+                                    .fixedSize()
+                                    .font(.system(size: 20))
+                                    .padding([.bottom],8)
+                                    .frame(width:100)
+                            }
+                            HStack{
+                                Text("連擊分數:")
+                                    .fixedSize()
+                                    .font(.system(size: 20))
+                                    .padding([.bottom],8)
+                                    .frame(width:100)
+                                Text("\(self.combeScore)")
+                                    .fixedSize()
+                                    .font(.system(size: 20))
+                                    .padding([.bottom],8)
+                                    .frame(width:100)
+                            }
+                            HStack{
+                                Text("時間分數:")
+                                    .fixedSize()
+                                    .font(.system(size: 20))
+                                    .padding([.bottom],8)
+                                    .frame(width:100)
+                                Text("\(self.timeBonus)")
+                                    .fixedSize()
+                                    .font(.system(size: 20))
+                                    .padding([.bottom],8)
+                                    .frame(width:100)
+                            }
+                            HStack{
+                                Text("總計得分:")
+                                    .fixedSize()
+                                    .font(.system(size: 20))
+                                    .padding([.top],10)
+                                    .padding([.bottom],18)
+                                    .frame(width:100)
+                                Text("\(score)")
+                                    .fixedSize()
+                                    .font(.system(size: 20))
+                                    .padding([.top],10)
+                                    .padding([.bottom],18)
+                                    .frame(width:100)
+                            }
                             Button(action:{
                                 self.showGrade = false
+                                GameStart()
+                                self.Table = pokemon2DTable
+                                self.gameTime = 180   //重設以下設定
+                                self.progressValue = 1.0
+                                self.combeCount = 0
+                                self.combeCountMax = 0
+                                self.combeScore = 0
                                 playSound(sound: "press")
                             }){
-                                Text("Continue").padding()
+                                Text("繼續").padding()
                                     .background(Color.white)
                                     .font(.system(size: 20))
                                     .border(Color.blue,width:3)
                                     .cornerRadius(8)
                             }
-                        }else{
-                            Text("Gamer Over")
+                        }.frame(width: self.showGrade ? UIScreen.main.bounds.width/2 : 0, height: self.showGrade ? UIScreen.main.bounds.height*4/5 : 0, alignment: .center)
+                        .background(Color.white)
+                        .opacity(self.showGrade ? 1 : 0)
+                        .cornerRadius(8)
+                    }else{
+                        VStack{
+                            Text("遊戲結束")
                                 .font(.largeTitle)
+                                .foregroundColor(Color.red)
                                 .padding([.top,.bottom],10)
                             Button(action:{
                                 self.showGrade = false
                                 GameStart()
                                 self.Table = pokemon2DTable
-                                self.gameTime = 180   //重設時將倒數恢復為180
+                                self.gameTime = 180   //重設以下設定
                                 self.progressValue = 1.0
+                                self.combeCount = 0
+                                self.combeCountMax = 0
+                                self.combeScore = 0
                                 playSound(sound: "press")
                             }){
-                                Text("Restart").padding()
+                                Text("重新開始").padding()
                                     .background(Color.white)
                                     .font(.system(size: 20))
                                     .border(Color.blue,width:3)
                                     .cornerRadius(8)
                             }
-                        }
-                            
-                    }.frame(width: self.showGrade ? UIScreen.main.bounds.width/3 : 0, height: self.showGrade ? UIScreen.main.bounds.height/2 : 0, alignment: .center)
+                        }.frame(width: self.showGrade ? UIScreen.main.bounds.width/3 : 0, height: self.showGrade ? UIScreen.main.bounds.height/2 : 0, alignment: .center)
                         .background(Color.white)
                         .opacity(self.showGrade ? 1 : 0)
                         .cornerRadius(8)
-                    
+                    }
                 }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Color.black.opacity(0.5))
             }
             
@@ -676,7 +766,7 @@ struct ContentView_Previews: PreviewProvider {
         ContentView().previewLayout(.fixed(width:896,height:414))
     }
 }
-//計時
+//計時進度條
 struct ProgressBar: View {
     @Binding var progress: Float
     
