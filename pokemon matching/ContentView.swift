@@ -8,16 +8,14 @@
 
 import SwiftUI
 import AVFoundation
-let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布"]
+let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布","含羞苞","正電拍拍"]
+let awardList = ["增加提示","增加洗牌","增加分數","...沒有東西!!"]
 var pokemon1DTable:[Pokemon] = []
 var pokemon2DTable:[[Pokemon]] = []
 var path:[Pokemon] = [] //兩者路徑
 var tableWidth = 12
 var tableHeight = 6
-var score = 0 //分數
 var level = "" //難易度
-var refreshTimes = 30 //洗牌次數
-var tipsTimes = 30 //提示次數
 var titleAudioPlayer : AVAudioPlayer? //主畫面音樂
 var audioPlayer : AVAudioPlayer? //音效
 func playSound(sound:String){
@@ -45,7 +43,7 @@ func Win(Table:[[Pokemon]])->Bool{
     for i in Table{
         for item in i {
             if (item.name != "無"){
-                    return false
+                return false
             }
         }
     }
@@ -56,7 +54,6 @@ func GameStart(){
     pokemon1DTable = []
     pokemon2DTable = []
     path = []
-    score = 0
     for _ in 0...tableWidth*tableHeight/2-1 {
         if let pokemonName = pokemonList.randomElement(){
             //寶可夢兩個同種類為一組
@@ -215,6 +212,14 @@ func getDirectionList(location:String)->[String]{
         return []
     }
 }
+func getBallImage(index:Int,select:Int,showAnimation:Bool)->AnyView{
+    if(index == select){
+        return AnyView(Image("Ball-3"))
+    }else{
+        return AnyView(Image("Ball-1")
+            .opacity(showAnimation ? 0 : 1))
+    }
+}
 struct Pokemon{
     var name:String?
     var x:Int?
@@ -225,7 +230,7 @@ struct ContentView: View { //主畫面
     @State var showGameView : Bool = false //切換頁面判斷
     @State var showSetting : Bool = false //顯示遊戲設定
     @State var showIntroduction : Bool = false //顯示說明
-    @State var showAnimation : Bool  = false
+    @State var showAnimation : Bool  = false //顯示視窗動畫
     var body: some View {
         ZStack{
             VStack{
@@ -394,17 +399,26 @@ struct GameView: View{ //遊戲介面
     @State var showAnimation = false
     @State var showAnimationB = false
     @State var showAttention = false
+    @State var showAnimationBall = false
+    @State var showAwardtext = false
     @State var showGrade = false
+    @State var showAward = false
     @State var selectA = Pokemon()
     @State var selectB = Pokemon()
     @State var tipsA = Pokemon()
     @State var tipsB = Pokemon()
+    @State var selectBall = -1
     @State var gameTime = 10 //遊戲時間
     @State var progressValue: Float = 1.0  //時間進度條
+    @State var score = 0 // 總分數
     @State var combeCount = 0    //  目前連擊分數
     @State var combeCountMax = 0 //  最大連擊
     @State var combeScore = 0  //  連擊分數
     @State var timeBonus = 0  //   時間分數
+    @State var refreshTimes = 3 //洗牌次數
+    @State var tipsTimes = 3 //提示次數
+    @State var GameResult = false //勝負判斷
+    @State var award = "" //事件獎勵
     var body: some View{
         ZStack{
             VStack{
@@ -418,8 +432,8 @@ struct GameView: View{ //遊戲介面
                             .foregroundColor(Color.white)
                         
                         ProgressBar(progress: self.$progressValue)
-                        .frame(width: 45.0, height: 45.0)
-                        .padding(10.0)
+                            .frame(width: 45.0, height: 45.0)
+                            .padding(10.0)
                         
                         Text("\(gameTime)")   //倒數計時
                             .font(.system(size:32))
@@ -429,23 +443,24 @@ struct GameView: View{ //遊戲介面
                                     self.gameTime -= 1
                                     self.progressValue -= 100/18000
                                 }else if(!self.showGrade){
+                                    self.GameResult = false
                                     self.showGrade = true
                                 }
-                            }
+                        }
                     }
                     
                     Spacer()
                     
                     Button(action:{
                         //do 提示
-                        if (tipsTimes > 0) {
+                        if (self.tipsTimes > 0) {
                             playSound(sound: "spell")
                             for item in path{
                                 self.Table[item.y!][item.x!].name = "無"
                             }
                             (self.tipsA , self.tipsB) = findTips(Table: self.Table)
                             if (self.tipsA.name != nil && self.tipsB.name != nil){
-                                tipsTimes -= 1
+                                self.tipsTimes -= 1
                                 path = []
                             }else{
                                 print("找不到解")
@@ -461,14 +476,14 @@ struct GameView: View{ //遊戲介面
                         .font(.system(size: 32))
                         .foregroundColor(Color.white)
                     Button(action:{
-                        if( refreshTimes > 0){
+                        if(self.refreshTimes > 0){
                             playSound(sound: "spell")
                             for item in path{
                                 self.Table[item.y!][item.x!].name = "無"
                             }
                             path = []
                             self.Table = shuffleTable(table:self.Table)
-                            refreshTimes -= 1
+                            self.refreshTimes -= 1
                             
                         }
                     }){
@@ -486,7 +501,7 @@ struct GameView: View{ //遊戲介面
                     Text("分數:")
                         .font(.system(size: 32))
                         .foregroundColor(Color.white)
-                    Text("\(score)")
+                    Text("\(self.score)")
                         .fixedSize()
                         .foregroundColor(Color.white)
                         .font(.system(size: 32))
@@ -494,7 +509,7 @@ struct GameView: View{ //遊戲介面
                     
                     
                     
-                        
+                    
                     
                 }.frame(minWidth:0,maxWidth: .infinity)//.background(Color.yellow)
                 HStack{
@@ -522,14 +537,18 @@ struct GameView: View{ //遊戲介面
                                                         withAnimation(Animation.linear(duration: 0.5)){
                                                             self.showAnimationB = true
                                                         }
-                                                        print(Win(Table:self.Table))
-                                                        self.showGrade = Win(Table:self.Table) //   過關判定
+                                                        if (Win(Table:self.Table)){ // 通關判定
+                                                            self.GameResult = true // 代表贏
+                                                            withAnimation(Animation.linear(duration: 0.5)){
+                                                                self.showGrade.toggle() //顯示結算視窗
+                                                            }
+                                                        }
                                                         self.combeCount += 1   //   連擊相關加分設定
                                                         if (self.combeCount >= 2) {
                                                             self.combeScore += 200
-                                                            score = score + 100 + 200
+                                                            self.score = self.score + 100 + 200
                                                         }else {
-                                                            score = score + 100
+                                                            self.score = self.score + 100
                                                         }
                                                         if (self.combeCount >= self.combeCountMax) {
                                                             self.combeCountMax = self.combeCount
@@ -594,47 +613,49 @@ struct GameView: View{ //遊戲介面
                 }
                 Spacer()
             }.background(Color.black.opacity(0.3))
-             
-
+            
             if(self.showAttention){
                 ZStack{
                     VStack{
                         //遊戲重新視窗
-                            Text("是否要重新開始")
-                                .font(.largeTitle)
-                                .padding(10)
-                            HStack{
-                                Button(action:{
-                                    self.showAttention = false
-                                    GameStart()
-                                    self.Table = pokemon2DTable
-                                    self.gameTime = 180   //重設以下設定
-                                    self.progressValue = 1.0
-                                    self.combeCount = 0
-                                    self.combeCountMax = 0
-                                    self.combeScore = 0
-                                    playSound(sound: "press")
-                                }){
-                                    Text("是")
-                                        .padding()
-                                        .background(Color.white)
-                                        .font(.system(size: 26))
-                                        .border(Color.blue,width:3)
-                                        .cornerRadius(8)
-                                }.padding(10)
-                                
-                                Button(action:{
-                                    self.showAttention = false
-                                    playSound(sound: "press")
-                                }){
-                                    Text("否")
-                                        .padding()
-                                        .background(Color.white)
-                                        .font(.system(size: 26))
-                                        .border(Color.blue,width:3)
-                                        .cornerRadius(8)
-                                }.padding(10)
-                            }
+                        Text("是否要重新開始")
+                            .font(.largeTitle)
+                            .padding(10)
+                        HStack{
+                            Button(action:{
+                                self.showAttention = false
+                                GameStart()
+                                self.Table = pokemon2DTable
+                                self.gameTime = 180   //重設以下設定
+                                self.progressValue = 1.0
+                                self.combeCount = 0
+                                self.combeCountMax = 0
+                                self.combeScore = 0
+                                self.score = 0
+                                self.tipsTimes = 3
+                                self.refreshTimes = 3
+                                playSound(sound: "press")
+                            }){
+                                Text("是")
+                                    .padding()
+                                    .background(Color.white)
+                                    .font(.system(size: 26))
+                                    .border(Color.blue,width:3)
+                                    .cornerRadius(8)
+                            }.padding(10)
+                            
+                            Button(action:{
+                                self.showAttention = false
+                                playSound(sound: "press")
+                            }){
+                                Text("否")
+                                    .padding()
+                                    .background(Color.white)
+                                    .font(.system(size: 26))
+                                    .border(Color.blue,width:3)
+                                    .cornerRadius(8)
+                            }.padding(10)
+                        }
                         
                     }.frame(width: self.showAttention ? UIScreen.main.bounds.width/2 : 0, height: self.showAttention ? UIScreen.main.bounds.height/2 : 0, alignment: .center)
                         .background(Color.white)
@@ -646,8 +667,8 @@ struct GameView: View{ //遊戲介面
             
             if(showGrade){
                 ZStack{
-                     //遊戲結算視窗
-                    if(Win(Table:self.Table)){
+                    //遊戲結算視窗
+                    if(self.GameResult){
                         VStack{
                             HStack{
                                 Text("過關!")
@@ -698,7 +719,7 @@ struct GameView: View{ //遊戲介面
                                     .padding([.top],10)
                                     .padding([.bottom],18)
                                     .frame(width:100)
-                                Text("\(score)")
+                                Text("\(self.score)")
                                     .fixedSize()
                                     .font(.system(size: 20))
                                     .padding([.top],10)
@@ -706,14 +727,10 @@ struct GameView: View{ //遊戲介面
                                     .frame(width:100)
                             }
                             Button(action:{
+                                withAnimation(Animation.linear(duration: 0.5)){
+                                    self.showAward.toggle() //顯示獎勵視窗
+                                }
                                 self.showGrade = false
-                                GameStart()
-                                self.Table = pokemon2DTable
-                                self.gameTime = 180   //重設以下設定
-                                self.progressValue = 1.0
-                                self.combeCount = 0
-                                self.combeCountMax = 0
-                                self.combeScore = 0
                                 playSound(sound: "press")
                             }){
                                 Text("繼續").padding()
@@ -723,9 +740,9 @@ struct GameView: View{ //遊戲介面
                                     .cornerRadius(8)
                             }
                         }.frame(width: self.showGrade ? UIScreen.main.bounds.width/2 : 0, height: self.showGrade ? UIScreen.main.bounds.height*4/5 : 0, alignment: .center)
-                        .background(Color.white)
-                        .opacity(self.showGrade ? 1 : 0)
-                        .cornerRadius(8)
+                            .background(Color.white)
+                            .opacity(self.showGrade ? 1 : 0)
+                            .cornerRadius(8)
                     }else{
                         VStack{
                             Text("遊戲結束")
@@ -741,6 +758,9 @@ struct GameView: View{ //遊戲介面
                                 self.combeCount = 0
                                 self.combeCountMax = 0
                                 self.combeScore = 0
+                                self.score = 0
+                                self.tipsTimes = 3
+                                self.refreshTimes = 3
                                 playSound(sound: "press")
                             }){
                                 Text("重新開始").padding()
@@ -750,12 +770,79 @@ struct GameView: View{ //遊戲介面
                                     .cornerRadius(8)
                             }
                         }.frame(width: self.showGrade ? UIScreen.main.bounds.width/3 : 0, height: self.showGrade ? UIScreen.main.bounds.height/2 : 0, alignment: .center)
-                        .background(Color.white)
-                        .opacity(self.showGrade ? 1 : 0)
-                        .cornerRadius(8)
+                            .background(Color.white)
+                            .opacity(self.showGrade ? 1 : 0)
+                            .cornerRadius(8)
                     }
+                    
                 }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Color.black.opacity(0.5))
             }
+                if(self.showAward){
+                    ZStack{
+                        VStack{
+                            Text("請選擇獎勵")
+                                .font(.system(size: 32))
+                                .padding([.top],30)
+                            HStack{
+                                ForEach(0...2,id:\.self){ index in
+                                    Button(action:{
+                                        if(!self.showAwardtext){
+                                        withAnimation{
+                                            self.showAwardtext.toggle()
+                                        }
+                                        self.award = awardList.randomElement()!
+                                            switch self.award {
+                                                case "增加分數":
+                                                    self.score+=1000
+                                                    break
+                                                case "增加提示":
+                                                    self.tipsTimes+=1
+                                                    break
+                                                case "增加洗牌":
+                                                    self.refreshTimes+=1
+                                                break
+                                            default:
+                                                break
+                                            }
+                                        self.selectBall = index
+                                        }
+                                    }){
+                                        getBallImage(index: index,select: self.selectBall,showAnimation:self.showAwardtext)
+                                    }.buttonStyle(PlainButtonStyle())
+                                }
+                            }
+                            Text(showAwardtext ? "獲得\(self.award)" : "")
+                                .opacity(showAwardtext ? 1 : 0)
+                            Button(action:{
+                                self.showAward = false
+                                self.showAwardtext = false
+                                self.GameResult = false
+                                GameStart()
+                                self.Table = pokemon2DTable
+                                self.gameTime = 180   //重設以下設定
+                                self.progressValue = 1.0
+                                self.combeCount = 0
+                                self.combeCountMax = 0
+                                self.combeScore = 0
+                                self.selectBall = -1
+                                self.award = ""
+                            }){
+                                Text("繼續遊玩")
+                                    .padding()
+                                    .font(.system(size: 26))
+                                    .background(Color.white)
+                                    .border(Color.blue,width:3)
+                                    .cornerRadius(8)
+                                    .padding()
+                            }
+                            Spacer()
+                        }.frame(width: self.showAward ? UIScreen.main.bounds.width/2 : 0, height: self.showAward ? UIScreen.main.bounds.height*2/3 : 0, alignment: .center)
+                            .background(Color.white)
+                            .opacity(self.showAward ? 1 : 0)
+                            .cornerRadius(8)
+                    }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Color.black.opacity(0.5))
+                }
+            
             
         }
         
@@ -783,11 +870,9 @@ struct ProgressBar: View {
                 
                 .rotationEffect(Angle(degrees: 270.0))
                 .animation(.linear)
-
+            
             
         }
     }
 }
-//遊戲說明
 //遊戲設定
-//結算的視窗
