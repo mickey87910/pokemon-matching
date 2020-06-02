@@ -8,14 +8,17 @@
 
 import SwiftUI
 import AVFoundation
-let pokemonList = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布","含羞苞","正電拍拍"]
+let pokemonListLV1 = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵"]
+let pokemonListLV2 = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布"]
+let pokemonListLV3 = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布","含羞苞","正電拍拍","火球鼠","拉普拉斯"]
+let pokemonListLV4 = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布","含羞苞","正電拍拍","火球鼠","拉普拉斯","沙奈朵","急凍鳥","洛奇亞","火焰鳥"]
 let awardList = ["增加提示","增加洗牌","增加分數","...沒有東西!!"]
 var pokemon1DTable:[Pokemon] = []
 var pokemon2DTable:[[Pokemon]] = []
 var path:[Pokemon] = [] //兩者路徑
 var tableWidth = 12
 var tableHeight = 6
-var level = "" //難易度
+var level = 1 //難易度
 var titleAudioPlayer : AVAudioPlayer? //主畫面音樂
 var audioPlayer : AVAudioPlayer? //音效
 func playSound(sound:String){
@@ -47,19 +50,37 @@ func Win(Table:[[Pokemon]])->Bool{
             }
         }
     }
+    level += 1      //過關難度增加
     return true
 }
 func GameStart(){
     //取出n*n的寶可夢
     pokemon1DTable = []
     pokemon2DTable = []
+    var currList: [String] = []
     path = []
-    for _ in 0...tableWidth*tableHeight/2-1 {
-        if let pokemonName = pokemonList.randomElement(){
+    switch level {     //難易度調整
+        case 1:
+            currList = pokemonListLV1
+        break
+        case 2:
+            currList = pokemonListLV2
+        break
+        case 3:
+            currList = pokemonListLV3
+        break
+        case 4:
+            currList = pokemonListLV4
+        break
+        default :
+            currList = pokemonListLV4
+        break
+    }
+    for i in 0...tableWidth*tableHeight/2-1 {
             //寶可夢兩個同種類為一組
-            pokemon1DTable.append(Pokemon(name:pokemonName))
-            pokemon1DTable.append(Pokemon(name:pokemonName))
-        }
+        pokemon1DTable.append(Pokemon(name:currList[i%currList.count]))
+        pokemon1DTable.append(Pokemon(name:currList[i%currList.count]))
+        
     }
     //打散寶可夢的排序
     pokemon1DTable.shuffle()
@@ -226,11 +247,98 @@ struct Pokemon{
     var y:Int?
     var direction:String?
 }
+
+struct ColorInvert: ViewModifier {     //難度按鈕屬性
+
+    @Environment(\.colorScheme) var colorScheme
+
+    func body(content: Content) -> some View {
+        Group {
+            if colorScheme == .dark {
+                content.colorInvert()
+            } else {
+                content
+            }
+        }
+    }
+}
+struct RadioButton: View {      //難度按鈕屬性
+
+    @Environment(\.colorScheme) var colorScheme
+
+    let id: String
+    let callback: (String)->()
+    let selectedID : String
+    let size: CGFloat
+    let color: Color
+    let textSize: CGFloat
+
+    init(
+        _ id: String,
+        callback: @escaping (String)->(),
+        selectedID: String,
+        size: CGFloat = 20,
+        color: Color = Color.primary,
+        textSize: CGFloat = 14
+        ) {
+        self.id = id
+        self.size = size
+        self.color = color
+        self.textSize = textSize
+        self.selectedID = selectedID
+        self.callback = callback
+    }
+
+    var body: some View {
+        Button(action:{
+            self.callback(self.id)
+        }) {
+            HStack{
+                Image(systemName: self.selectedID == self.id ? "largecircle.fill.circle" : "circle")
+                    .renderingMode(.original)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: self.size, height: self.size)
+                    .modifier(ColorInvert())
+                Text(id)
+                    .font(Font.system(size: textSize))
+            }.foregroundColor(self.color)
+        }
+        .foregroundColor(self.color)
+        .frame(alignment: .center)
+    }
+}
+
+struct RadioButtonGroup: View {    //難度按鈕屬性
+
+    let items : [String]
+
+    @State var selectedId: String = ""
+
+    let callback: (String) -> ()
+
+    var body: some View {
+        HStack {
+            ForEach(0..<items.count) { index in
+                RadioButton(self.items[index], callback: self.radioGroupCallback, selectedID: self.selectedId)
+            }
+        }
+    }
+
+    func radioGroupCallback(id: String) {
+        selectedId = id
+        callback(id)
+    }
+}
+
 struct ContentView: View { //主畫面
     @State var showGameView : Bool = false //切換頁面判斷
     @State var showSetting : Bool = false //顯示遊戲設定
     @State var showIntroduction : Bool = false //顯示說明
     @State var showAnimation : Bool  = false //顯示視窗動畫
+    @State private var selected = 1 //難度選項
+    @State var levelInfoCount = "6種寶可夢"//難度說明（種類）
+    @State var levelInfoTime = "180秒"//難度說明（秒數）
     var body: some View {
         ZStack{
             VStack{
@@ -305,6 +413,69 @@ struct ContentView: View { //主畫面
                         if(self.showSetting == true){ //遊戲設定視窗
                             Text("遊戲設定")
                                 .font(.largeTitle)
+                            HStack{
+                                Text("難度選擇")
+                                    .font(Font.headline)
+                                    .padding()
+                                RadioButtonGroup(items: ["難度一", "難度二", "難度三", "難度四"], selectedId: "難度一") { selected in
+                                    switch selected {//難度調整
+                                        case "難度一" :
+                                            level = 1
+                                            self.levelInfoCount = "6種寶可夢"
+                                            self.levelInfoTime = "180秒"
+                                            print(level)
+                                            break
+                                        case "難度二" :
+                                            level = 2
+                                            self.levelInfoCount = "9種寶可夢"
+                                            self.levelInfoTime = "180秒"
+                                            print(level)
+                                            break
+                                        case "難度三" :
+                                            level = 3
+                                            self.levelInfoCount = "12種寶可夢"
+                                            self.levelInfoTime = "180秒"
+                                            print(level)
+                                            break
+                                        case "難度四" :
+                                            level = 4
+                                            self.levelInfoCount = "16種寶可夢"
+                                            self.levelInfoTime = "180秒"
+                                            print(level)
+                                            break
+                                        default :
+                                            level = 1
+                                            self.levelInfoCount = "六種寶可夢"
+                                            self.levelInfoTime = "180秒"
+                                            print(level)
+                                            break
+                                    }
+                                  }
+                            }
+                            HStack{
+                                Text("寶可夢 ：")
+                                    .fixedSize()
+                                    .font(.system(size: 20))
+                                    .padding([.bottom],15)
+                                    .frame(width:100)
+                                Text(" \(self.levelInfoCount)")
+                                    .fixedSize()
+                                    .font(.system(size: 20))
+                                    .padding([.bottom],15)
+                                    .frame(width:100)
+                            }
+                            HStack{
+                                Text("時間 ：")
+                                    .fixedSize()
+                                    .font(.system(size: 20))
+                                    .padding([.bottom],15)
+                                    .frame(width:100)
+                                Text(" \(self.levelInfoTime)")
+                                    .fixedSize()
+                                    .font(.system(size: 20))
+                                    .padding([.bottom],15)
+                                    .frame(width:100)
+                            }
                             Button(action:{
                                 self.showSetting = false
                                 self.showAnimation = false
@@ -317,6 +488,7 @@ struct ContentView: View { //主畫面
                                     .border(Color.blue,width:3)
                                     .cornerRadius(8)
                             }
+                                                    
                         }else if(self.showIntroduction == true){ //遊戲說明視窗
                             Text("遊戲說明")
                                 .font(.largeTitle)
@@ -408,7 +580,7 @@ struct GameView: View{ //遊戲介面
     @State var tipsA = Pokemon()
     @State var tipsB = Pokemon()
     @State var selectBall = -1
-    @State var gameTime = 10 //遊戲時間
+    @State var gameTime = 180 //遊戲時間
     @State var progressValue: Float = 1.0  //時間進度條
     @State var score = 0 // 總分數
     @State var combeCount = 0    //  目前連擊分數
@@ -540,6 +712,7 @@ struct GameView: View{ //遊戲介面
                                                         if (Win(Table:self.Table)){ // 通關判定
                                                             self.GameResult = true // 代表贏
                                                             withAnimation(Animation.linear(duration: 0.5)){
+                                                                self.score += self.timeBonus
                                                                 self.showGrade.toggle() //顯示結算視窗
                                                             }
                                                         }
@@ -555,11 +728,11 @@ struct GameView: View{ //遊戲介面
                                                         }
                                                         
                                                         
-                                                        if (self.gameTime + 5 >= 180){   //時間規則：成功配對加五秒（上限180秒）
+                                                        if (self.gameTime + 1 >= 180){   //時間規則：成功配對加五秒（上限180秒）
                                                             self.gameTime = 180
                                                             self.progressValue = 1.0
                                                         }else{
-                                                            self.gameTime += 5
+                                                            self.gameTime += 1
                                                             self.progressValue += 500/18000
                                                         }
                                                         self.timeBonus = self.gameTime * 100
@@ -624,8 +797,6 @@ struct GameView: View{ //遊戲介面
                         HStack{
                             Button(action:{
                                 self.showAttention = false
-                                GameStart()
-                                self.Table = pokemon2DTable
                                 self.gameTime = 180   //重設以下設定
                                 self.progressValue = 1.0
                                 self.combeCount = 0
@@ -634,6 +805,8 @@ struct GameView: View{ //遊戲介面
                                 self.score = 0
                                 self.tipsTimes = 3
                                 self.refreshTimes = 3
+                                GameStart()
+                                self.Table = pokemon2DTable
                                 playSound(sound: "press")
                             }){
                                 Text("是")
@@ -675,6 +848,9 @@ struct GameView: View{ //遊戲介面
                                     .font(.system(size: 40))
                                     .padding([.top,.bottom],20)
                                     .foregroundColor(Color.red)
+                                    .onAppear(perform: {
+                                        playSound(sound: "victory")
+                                        })
                             }
                             HStack{
                                 Text("最大連擊:")
@@ -749,10 +925,11 @@ struct GameView: View{ //遊戲介面
                                 .font(.largeTitle)
                                 .foregroundColor(Color.red)
                                 .padding([.top,.bottom],10)
+                                .onAppear(perform: {
+                                        playSound(sound: "gameover")
+                                    })
                             Button(action:{
                                 self.showGrade = false
-                                GameStart()
-                                self.Table = pokemon2DTable
                                 self.gameTime = 180   //重設以下設定
                                 self.progressValue = 1.0
                                 self.combeCount = 0
@@ -761,6 +938,9 @@ struct GameView: View{ //遊戲介面
                                 self.score = 0
                                 self.tipsTimes = 3
                                 self.refreshTimes = 3
+                                level = 1
+                                GameStart()
+                                self.Table = pokemon2DTable
                                 playSound(sound: "press")
                             }){
                                 Text("重新開始").padding()
@@ -786,6 +966,7 @@ struct GameView: View{ //遊戲介面
                             HStack{
                                 ForEach(0...2,id:\.self){ index in
                                     Button(action:{
+                                        playSound(sound: "pokeball_opening")
                                         if(!self.showAwardtext){
                                         withAnimation{
                                             self.showAwardtext.toggle()
@@ -836,7 +1017,7 @@ struct GameView: View{ //遊戲介面
                                     .padding()
                             }
                             Spacer()
-                        }.frame(width: self.showAward ? UIScreen.main.bounds.width/2 : 0, height: self.showAward ? UIScreen.main.bounds.height*2/3 : 0, alignment: .center)
+                        }.frame(width: self.showAward ? UIScreen.main.bounds.width/2 : 0, height: self.showAward ? UIScreen.main.bounds.height*4/5 : 0, alignment: .center)
                             .background(Color.white)
                             .opacity(self.showAward ? 1 : 0)
                             .cornerRadius(8)
