@@ -60,24 +60,24 @@ func GameStart(){
     var currList: [String] = []
     path = []
     switch level {     //難易度調整
-        case 1:
-            currList = pokemonListLV1
+    case 1:
+        currList = pokemonListLV1
         break
-        case 2:
-            currList = pokemonListLV2
+    case 2:
+        currList = pokemonListLV2
         break
-        case 3:
-            currList = pokemonListLV3
+    case 3:
+        currList = pokemonListLV3
         break
-        case 4:
-            currList = pokemonListLV4
+    case 4:
+        currList = pokemonListLV4
         break
-        default :
-            currList = pokemonListLV4
+    default :
+        currList = pokemonListLV4
         break
     }
     for i in 0...tableWidth*tableHeight/2-1 {
-            //寶可夢兩個同種類為一組
+        //寶可夢兩個同種類為一組
         pokemon1DTable.append(Pokemon(name:currList[i%currList.count]))
         pokemon1DTable.append(Pokemon(name:currList[i%currList.count]))
         
@@ -130,7 +130,7 @@ func findTips(Table:[[Pokemon]])->(Pokemon,Pokemon){
                             selectB.name = Table[k][m].name
                             selectB.x = m
                             selectB.y = k
-                            if(findpath(nodeX: selectA.x!, nodeY: selectA.y!, destinationX: selectB.x!, destinationY: selectB.y!, Table: Table)){
+                            if(findpath(nodeX: selectA.x!, nodeY: selectA.y!, destinationX: selectB.x!, destinationY: selectB.y!, Table: Table,getPath: false)){
                                 return (selectA,selectB)
                             }
                         }
@@ -143,7 +143,7 @@ func findTips(Table:[[Pokemon]])->(Pokemon,Pokemon){
     selectB = Pokemon()
     return (selectA,selectB)
 }
-func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Pokemon]],nodes:[Pokemon] = [],times:Int = 0,direction:String = "NONE")->Bool{
+func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Pokemon]],nodes:[Pokemon] = [],times:Int = 0,direction:String = "NONE" , getPath:Bool)->Bool{
     //初始化參數 & let to var
     var nodes = nodes
     var flag = false
@@ -166,7 +166,9 @@ func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Poke
         if (nodeX == destinationX && nodeY == destinationY){
             //如果當前這個位置抵達目的地
             nodes[nodes.count-1].direction = "tail"
-            path = nodes
+            if(getPath){
+                path = nodes
+            }
             return true
         }else if(Table[nodeY][nodeX].name != "無" && direction != "NONE"){
             //如果當前節點不可行走(初始起點不算)
@@ -188,11 +190,11 @@ func findpath(nodeX:Int,nodeY:Int,destinationX:Int,destinationY:Int,Table:[[Poke
                 if(flag != true){
                     if (direction == directionList[i] || direction == "NONE"){
                         nodes[nodes.count-1].direction = getDirectionNumber(oldDirection: direction, newDirection: directionList[i],directionChanged: false)
-                        flag = findpath(nodeX: nodeX+x, nodeY: nodeY+y, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times, direction: directionList[i])
+                        flag = findpath(nodeX: nodeX+x, nodeY: nodeY+y, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times, direction: directionList[i],getPath: getPath)
                     }else{
                         //如果將行走方向與原方向不同代表轉彎
                         nodes[nodes.count-1].direction = getDirectionNumber(oldDirection: direction, newDirection: directionList[i],directionChanged: true)
-                        flag = findpath(nodeX: nodeX+x, nodeY: nodeY+y, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times+1, direction: directionList[i])
+                        flag = findpath(nodeX: nodeX+x, nodeY: nodeY+y, destinationX: destinationX, destinationY: destinationY, Table: Table, nodes: nodes, times: times+1, direction: directionList[i],getPath: getPath)
                     }
                 }
             }
@@ -249,9 +251,9 @@ struct Pokemon{
 }
 
 struct ColorInvert: ViewModifier {     //難度按鈕屬性
-
+    
     @Environment(\.colorScheme) var colorScheme
-
+    
     func body(content: Content) -> some View {
         Group {
             if colorScheme == .dark {
@@ -263,16 +265,16 @@ struct ColorInvert: ViewModifier {     //難度按鈕屬性
     }
 }
 struct RadioButton: View {      //難度按鈕屬性
-
+    
     @Environment(\.colorScheme) var colorScheme
-
+    
     let id: String
     let callback: (String)->()
     let selectedID : String
     let size: CGFloat
     let color: Color
     let textSize: CGFloat
-
+    
     init(
         _ id: String,
         callback: @escaping (String)->(),
@@ -280,7 +282,7 @@ struct RadioButton: View {      //難度按鈕屬性
         size: CGFloat = 20,
         color: Color = Color.primary,
         textSize: CGFloat = 14
-        ) {
+    ) {
         self.id = id
         self.size = size
         self.color = color
@@ -288,7 +290,7 @@ struct RadioButton: View {      //難度按鈕屬性
         self.selectedID = selectedID
         self.callback = callback
     }
-
+    
     var body: some View {
         Button(action:{
             self.callback(self.id)
@@ -310,13 +312,13 @@ struct RadioButton: View {      //難度按鈕屬性
 }
 
 struct RadioButtonGroup: View {    //難度按鈕屬性
-
+    
     let items : [String]
-
+    
     @State var selectedId: String = ""
-
+    
     let callback: (String) -> ()
-
+    
     var body: some View {
         HStack {
             ForEach(0..<items.count) { index in
@@ -324,7 +326,7 @@ struct RadioButtonGroup: View {    //難度按鈕屬性
             }
         }
     }
-
+    
     func radioGroupCallback(id: String) {
         selectedId = id
         callback(id)
@@ -419,38 +421,38 @@ struct ContentView: View { //主畫面
                                     .padding()
                                 RadioButtonGroup(items: ["難度一", "難度二", "難度三", "難度四"], selectedId: "難度一") { selected in
                                     switch selected {//難度調整
-                                        case "難度一" :
-                                            level = 1
-                                            self.levelInfoCount = "6種寶可夢"
-                                            self.levelInfoTime = "180秒"
-                                            print(level)
-                                            break
-                                        case "難度二" :
-                                            level = 2
-                                            self.levelInfoCount = "9種寶可夢"
-                                            self.levelInfoTime = "180秒"
-                                            print(level)
-                                            break
-                                        case "難度三" :
-                                            level = 3
-                                            self.levelInfoCount = "12種寶可夢"
-                                            self.levelInfoTime = "180秒"
-                                            print(level)
-                                            break
-                                        case "難度四" :
-                                            level = 4
-                                            self.levelInfoCount = "16種寶可夢"
-                                            self.levelInfoTime = "180秒"
-                                            print(level)
-                                            break
-                                        default :
-                                            level = 1
-                                            self.levelInfoCount = "六種寶可夢"
-                                            self.levelInfoTime = "180秒"
-                                            print(level)
-                                            break
+                                    case "難度一" :
+                                        level = 1
+                                        self.levelInfoCount = "6種寶可夢"
+                                        self.levelInfoTime = "180秒"
+                                        print(level)
+                                        break
+                                    case "難度二" :
+                                        level = 2
+                                        self.levelInfoCount = "9種寶可夢"
+                                        self.levelInfoTime = "180秒"
+                                        print(level)
+                                        break
+                                    case "難度三" :
+                                        level = 3
+                                        self.levelInfoCount = "12種寶可夢"
+                                        self.levelInfoTime = "180秒"
+                                        print(level)
+                                        break
+                                    case "難度四" :
+                                        level = 4
+                                        self.levelInfoCount = "16種寶可夢"
+                                        self.levelInfoTime = "180秒"
+                                        print(level)
+                                        break
+                                    default :
+                                        level = 1
+                                        self.levelInfoCount = "六種寶可夢"
+                                        self.levelInfoTime = "180秒"
+                                        print(level)
+                                        break
                                     }
-                                  }
+                                }
                             }
                             HStack{
                                 Text("寶可夢 ：")
@@ -488,7 +490,7 @@ struct ContentView: View { //主畫面
                                     .border(Color.blue,width:3)
                                     .cornerRadius(8)
                             }
-                                                    
+                            
                         }else if(self.showIntroduction == true){ //遊戲說明視窗
                             Text("遊戲說明")
                                 .font(.largeTitle)
@@ -692,7 +694,7 @@ struct GameView: View{ //遊戲介面
                                 ForEach(0...tableWidth-1,id:\.self){ j in
                                     Button(action:{
                                         //Button Action
-                                        if (self.Table[i][j].name == "無" || self.Table[i][j].name == "星星"){
+                                        if (self.Table[i][j].name == "無"){
                                             self.selectA = Pokemon()
                                             self.selectB = Pokemon()
                                         }else{
@@ -705,7 +707,8 @@ struct GameView: View{ //遊戲介面
                                                 self.showAnimationB = false
                                                 if (self.selectA.name == self.selectB.name && (self.selectA.x != self.selectB.x || self.selectA.y != self.selectB.y) ){//名字相同且不同位置
                                                     path = []
-                                                    if(findpath(nodeX:self.selectA.x!,nodeY:self.selectA.y!,destinationX:self.selectB.x!,destinationY:self.selectB.y!,Table:self.Table)){
+                                                    if(findpath(nodeX:self.selectA.x!,nodeY:self.selectA.y!,destinationX:self.selectB.x!,destinationY:self.selectB.y!,Table:self.Table,getPath:true)){
+                                                        playSound(sound: "hit")
                                                         withAnimation(Animation.linear(duration: 0.5)){
                                                             self.showAnimationB = true
                                                         }
@@ -714,6 +717,36 @@ struct GameView: View{ //遊戲介面
                                                             withAnimation(Animation.linear(duration: 0.5)){
                                                                 self.score += self.timeBonus
                                                                 self.showGrade.toggle() //顯示結算視窗
+                                                            }
+                                                        }else{
+                                                            print("沒有獲勝")
+                                                            var tmpA : Pokemon
+                                                            var tmpB : Pokemon
+                                                            var tmpTable = self.Table
+                                                            for item in path{
+                                                                tmpTable[item.y!][item.x!].name = "無"
+                                                            }
+                                                            (tmpA,tmpB) = findTips(Table: tmpTable)
+                                                            print(tmpA)
+                                                            print(tmpB)
+                                                            if (tmpA.name == nil && tmpB.name == nil){ //無解需洗牌
+                                                                print("目前無解")
+                                                                if(self.refreshTimes > 0){
+                                                                    playSound(sound: "ohoh")
+                                                                    for item in path{
+                                                                        self.Table[item.y!][item.x!].name = "無"
+                                                                    }
+                                                                    path = []
+                                                                    self.Table = shuffleTable(table:self.Table)
+                                                                    self.refreshTimes -= 1
+                                                                }else{
+                                                                    print("洗牌不夠")
+                                                                    withAnimation{
+                                                                        self.showGrade.toggle()
+                                                                    }
+                                                                }
+                                                            }else{
+                                                                print("目前有解")
                                                             }
                                                         }
                                                         self.combeCount += 1   //   連擊相關加分設定
@@ -736,7 +769,6 @@ struct GameView: View{ //遊戲介面
                                                             self.progressValue += 500/18000
                                                         }
                                                         self.timeBonus = self.gameTime * 100
-                                                        playSound(sound: "hit")
                                                     }else{
                                                         //如果找不到連接之路徑
                                                         print("找無路徑")
@@ -850,7 +882,7 @@ struct GameView: View{ //遊戲介面
                                     .foregroundColor(Color.red)
                                     .onAppear(perform: {
                                         playSound(sound: "victory")
-                                        })
+                                    })
                             }
                             HStack{
                                 Text("最大連擊:")
@@ -926,8 +958,8 @@ struct GameView: View{ //遊戲介面
                                 .foregroundColor(Color.red)
                                 .padding([.top,.bottom],10)
                                 .onAppear(perform: {
-                                        playSound(sound: "gameover")
-                                    })
+                                    playSound(sound: "gameover")
+                                })
                             Button(action:{
                                 self.showGrade = false
                                 self.gameTime = 180   //重設以下設定
@@ -957,72 +989,72 @@ struct GameView: View{ //遊戲介面
                     
                 }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Color.black.opacity(0.5))
             }
-                if(self.showAward){
-                    ZStack{
-                        VStack{
-                            Text("請選擇獎勵")
-                                .font(.system(size: 32))
-                                .padding([.top],30)
-                            HStack{
-                                ForEach(0...2,id:\.self){ index in
-                                    Button(action:{
-                                        playSound(sound: "pokeball_opening")
-                                        if(!self.showAwardtext){
+            if(self.showAward){
+                ZStack{
+                    VStack{
+                        Text("請選擇獎勵")
+                            .font(.system(size: 32))
+                            .padding([.top],30)
+                        HStack{
+                            ForEach(0...2,id:\.self){ index in
+                                Button(action:{
+                                    playSound(sound: "pokeball_opening")
+                                    if(!self.showAwardtext){
                                         withAnimation{
                                             self.showAwardtext.toggle()
                                         }
                                         self.award = awardList.randomElement()!
-                                            switch self.award {
-                                                case "增加分數":
-                                                    self.score+=1000
-                                                    break
-                                                case "增加提示":
-                                                    self.tipsTimes+=1
-                                                    break
-                                                case "增加洗牌":
-                                                    self.refreshTimes+=1
-                                                break
-                                            default:
-                                                break
-                                            }
-                                        self.selectBall = index
+                                        switch self.award {
+                                        case "增加分數":
+                                            self.score+=1000
+                                            break
+                                        case "增加提示":
+                                            self.tipsTimes+=1
+                                            break
+                                        case "增加洗牌":
+                                            self.refreshTimes+=1
+                                            break
+                                        default:
+                                            break
                                         }
-                                    }){
-                                        getBallImage(index: index,select: self.selectBall,showAnimation:self.showAwardtext)
-                                    }.buttonStyle(PlainButtonStyle())
-                                }
+                                        self.selectBall = index
+                                    }
+                                }){
+                                    getBallImage(index: index,select: self.selectBall,showAnimation:self.showAwardtext)
+                                }.buttonStyle(PlainButtonStyle())
                             }
-                            Text(showAwardtext ? "獲得\(self.award)" : "")
-                                .opacity(showAwardtext ? 1 : 0)
-                            Button(action:{
-                                self.showAward = false
-                                self.showAwardtext = false
-                                self.GameResult = false
-                                GameStart()
-                                self.Table = pokemon2DTable
-                                self.gameTime = 180   //重設以下設定
-                                self.progressValue = 1.0
-                                self.combeCount = 0
-                                self.combeCountMax = 0
-                                self.combeScore = 0
-                                self.selectBall = -1
-                                self.award = ""
-                            }){
-                                Text("繼續遊玩")
-                                    .padding()
-                                    .font(.system(size: 26))
-                                    .background(Color.white)
-                                    .border(Color.blue,width:3)
-                                    .cornerRadius(8)
-                                    .padding()
-                            }
-                            Spacer()
-                        }.frame(width: self.showAward ? UIScreen.main.bounds.width/2 : 0, height: self.showAward ? UIScreen.main.bounds.height*4/5 : 0, alignment: .center)
-                            .background(Color.white)
-                            .opacity(self.showAward ? 1 : 0)
-                            .cornerRadius(8)
-                    }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Color.black.opacity(0.5))
-                }
+                        }
+                        Text(showAwardtext ? "獲得\(self.award)" : "")
+                            .opacity(showAwardtext ? 1 : 0)
+                        Button(action:{
+                            self.showAward = false
+                            self.showAwardtext = false
+                            self.GameResult = false
+                            GameStart()
+                            self.Table = pokemon2DTable
+                            self.gameTime = 180   //重設以下設定
+                            self.progressValue = 1.0
+                            self.combeCount = 0
+                            self.combeCountMax = 0
+                            self.combeScore = 0
+                            self.selectBall = -1
+                            self.award = ""
+                        }){
+                            Text("繼續遊玩")
+                                .padding()
+                                .font(.system(size: 26))
+                                .background(Color.white)
+                                .border(Color.blue,width:3)
+                                .cornerRadius(8)
+                                .padding()
+                        }
+                        Spacer()
+                    }.frame(width: self.showAward ? UIScreen.main.bounds.width/2 : 0, height: self.showAward ? UIScreen.main.bounds.height*4/5 : 0, alignment: .center)
+                        .background(Color.white)
+                        .opacity(self.showAward ? 1 : 0)
+                        .cornerRadius(8)
+                }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Color.black.opacity(0.5))
+            }
             
             
         }
