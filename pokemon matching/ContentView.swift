@@ -10,8 +10,8 @@ import SwiftUI
 import AVFoundation
 let pokemonListLV1 = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵"]
 let pokemonListLV2 = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布"]
-let pokemonListLV3 = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布","含羞苞","正電拍拍","火球鼠","拉普拉斯"]
-let pokemonListLV4 = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布","含羞苞","正電拍拍","火球鼠","拉普拉斯","沙奈朵","急凍鳥","洛奇亞","火焰鳥"]
+let pokemonListLV3 = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布","含羞苞","正電拍拍","火球鼠","龍蝦小兵"]
+let pokemonListLV4 = ["皮卡丘","伊布","小火龍","耿鬼","妙娃種子","百變怪","卡比獸","鯉魚王","傑尼龜","向尾喵","小小象","地鼠","沼王","仙子伊布","含羞苞","正電拍拍","火球鼠","龍蝦小兵","哈克龍","凱西","六尾","小拉達"]
 let awardList = ["增加提示","增加洗牌","增加分數","...沒有東西!!"]
 var pokemon1DTable:[Pokemon] = []
 var pokemon2DTable:[[Pokemon]] = []
@@ -265,16 +265,13 @@ struct ColorInvert: ViewModifier {     //難度按鈕屬性
     }
 }
 struct RadioButton: View {      //難度按鈕屬性
-    
     @Environment(\.colorScheme) var colorScheme
-    
     let id: String
     let callback: (String)->()
     let selectedID : String
     let size: CGFloat
     let color: Color
     let textSize: CGFloat
-    
     init(
         _ id: String,
         callback: @escaping (String)->(),
@@ -290,7 +287,6 @@ struct RadioButton: View {      //難度按鈕屬性
         self.selectedID = selectedID
         self.callback = callback
     }
-    
     var body: some View {
         Button(action:{
             self.callback(self.id)
@@ -312,13 +308,9 @@ struct RadioButton: View {      //難度按鈕屬性
 }
 
 struct RadioButtonGroup: View {    //難度按鈕屬性
-    
     let items : [String]
-    
     @State var selectedId: String = ""
-    
     let callback: (String) -> ()
-    
     var body: some View {
         HStack {
             ForEach(0..<items.count) { index in
@@ -326,7 +318,6 @@ struct RadioButtonGroup: View {    //難度按鈕屬性
             }
         }
     }
-    
     func radioGroupCallback(id: String) {
         selectedId = id
         callback(id)
@@ -339,7 +330,7 @@ struct ContentView: View { //主畫面
     @State var showIntroduction : Bool = false //顯示說明
     @State var showAnimation : Bool  = false //顯示視窗動畫
     @State private var selected = 1 //難度選項
-    @State var levelInfoCount = "6種寶可夢"//難度說明（種類）
+    @State var levelInfoCount = "10種寶可夢"//難度說明（種類）
     @State var levelInfoTime = "180秒"//難度說明（秒數）
     var body: some View {
         ZStack{
@@ -357,8 +348,7 @@ struct ContentView: View { //主畫面
                         Spacer()
                     }
                     HStack{
-                        Button(action:{
-                            //要執行的內容
+                        Button(action:{//要執行的內容
                             GameStart()
                             self.showGameView = true
                             self.showIntroduction = false
@@ -367,8 +357,7 @@ struct ContentView: View { //主畫面
                             titleAudioPlayer?.stop()
                             playSound(sound: "press")
                         }){
-                            //按鈕樣式設定
-                            Text("開始遊戲")
+                            Text("開始遊戲")//按鈕樣式設定
                                 .padding()
                                 .font(.system(size: 26))
                                 .background(Color.white)
@@ -423,31 +412,31 @@ struct ContentView: View { //主畫面
                                     switch selected {//難度調整
                                     case "難度一" :
                                         level = 1
-                                        self.levelInfoCount = "6種寶可夢"
+                                        self.levelInfoCount = "10種寶可夢"
                                         self.levelInfoTime = "180秒"
                                         print(level)
                                         break
                                     case "難度二" :
                                         level = 2
-                                        self.levelInfoCount = "9種寶可夢"
+                                        self.levelInfoCount = "14種寶可夢"
                                         self.levelInfoTime = "180秒"
                                         print(level)
                                         break
                                     case "難度三" :
                                         level = 3
-                                        self.levelInfoCount = "12種寶可夢"
+                                        self.levelInfoCount = "18種寶可夢"
                                         self.levelInfoTime = "180秒"
                                         print(level)
                                         break
                                     case "難度四" :
                                         level = 4
-                                        self.levelInfoCount = "16種寶可夢"
+                                        self.levelInfoCount = "22種寶可夢"
                                         self.levelInfoTime = "180秒"
                                         print(level)
                                         break
                                     default :
                                         level = 1
-                                        self.levelInfoCount = "六種寶可夢"
+                                        self.levelInfoCount = "10種寶可夢"
                                         self.levelInfoTime = "180秒"
                                         print(level)
                                         break
@@ -680,11 +669,6 @@ struct GameView: View{ //遊戲介面
                         .foregroundColor(Color.white)
                         .font(.system(size: 32))
                         .frame(width:100)
-                    
-                    
-                    
-                    
-                    
                 }.frame(minWidth:0,maxWidth: .infinity)//.background(Color.yellow)
                 HStack{
                     Spacer()//左側
@@ -848,7 +832,6 @@ struct GameView: View{ //遊戲介面
                                     .border(Color.blue,width:3)
                                     .cornerRadius(8)
                             }.padding(10)
-                            
                             Button(action:{
                                 self.showAttention = false
                                 playSound(sound: "press")
@@ -986,7 +969,6 @@ struct GameView: View{ //遊戲介面
                             .opacity(self.showGrade ? 1 : 0)
                             .cornerRadius(8)
                     }
-                    
                 }.frame(minWidth:0,maxWidth: .infinity,minHeight: 0,maxHeight: .infinity).edgesIgnoringSafeArea(.all).background(Color.black.opacity(0.5))
             }
             if(self.showAward){
