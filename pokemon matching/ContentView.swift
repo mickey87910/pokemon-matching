@@ -491,7 +491,7 @@ struct ContentView: View { //主畫面
                             Image("intro2").resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 230, height: 70)
-                            Text("成功消除可延長5秒，連續消除可獲得分數加成")
+                            Text("成功消除可延長1秒，連續消除可獲得分數加成")
                                 .padding([.bottom],10)
                             Text("成功消除所有寶可夢即可獲勝")
                                 .padding([.bottom],10)
