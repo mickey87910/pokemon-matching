@@ -1,6 +1,8 @@
 # 寶可夢連連看遊戲
 ## Introduction
-最近看學大(tetristhegrandmaster3)在玩神奇寶貝連連看(kawaii)的Flash小遊戲，還超越阿公(通關)，所以就寫了一個寶可夢連連看遊戲當作IOS程式設計的期末專題作品   
+最近看學大(tetristhegrandmaster3)在玩神奇寶貝連連看(kawaii)的Flash小遊戲，還超越阿公(通關)，所以就寫了一個寶可夢連連看遊戲當作IOS程式設計的期末專題作品  
+  
+These days,I was watching "tetristhegrandmaster3" who played 神奇寶貝連連看(kawaii)[1]. the Flash game is fun, So I reference the game rule , and remake it on IOS. 
 ## Preview
 #### Main  
 <img src="https://github.com/omega87910/MY_GITHUB_IMAGES/blob/master/pokemon-matching/title.png" height="50%" width="50%">
@@ -36,7 +38,7 @@ git clone https://github.com/omega87910/pokemon-matching.git
 then build it in Xcode  
 
 ## Reference
-<a href="http://iyoshi.tw/game2162.html" >參考遊戲</a>  
+[1] <a href="http://iyoshi.tw/game2162.html" >Reference Game</a>  
 
 ## Other
 <a href="https://github.com/omega87910/pokemon-matching-android">Android版本</a>  
