@@ -45,5 +45,8 @@ then build it in Xcode
 ## Reference
 [1] <a id="reference1" href="http://iyoshi.tw/game2162.html" >Reference Game</a>  
 
+## Contributors
+[![](https://github.com/omega87910.png?size=50)](https://github.com/omega87910)
+<a href="https://github.com/fals0827"><img src="https://github.com/fals0827.png" width=50></a>  
 ## Other
 <a href="https://github.com/omega87910/pokemon-matching-android">Android版本</a>  
